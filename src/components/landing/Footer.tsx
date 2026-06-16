@@ -17,8 +17,8 @@ export function Footer() {
               <h3 className="text-xl font-bold text-[var(--color-navy)] mb-4">روابط سريعة</h3>
               <ul className="space-y-2 text-gray-600">
                 <li><Link href="/" className="hover:text-[var(--color-navy)]">الرئيسية</Link></li>
-                <li><Link href="#properties" className="hover:text-[var(--color-navy)]">العقارات</Link></li>
-                <li><Link href="#about" className="hover:text-[var(--color-navy)]">من نحن</Link></li>
+                <li><Link href="/properties" className="hover:text-[var(--color-navy)]">العقارات</Link></li>
+                <li><Link href="/#contact" className="hover:text-[var(--color-navy)]">تواصل معنا</Link></li>
               </ul>
             </div>
 

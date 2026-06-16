@@ -1,14 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
-import { properties } from '@/data/properties';
+import { getProperties } from '@/lib/queries';
+import type { Property } from '@/lib/supabase';
 import Link from 'next/link';
 import { Bed, Bath, Square, ArrowLeft, Search, MapPin, SlidersHorizontal, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PropertiesPage() {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProperties().then((data) => {
+      setProperties(data);
+      setLoading(false);
+    });
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('الجميع');
   const [propertyType, setPropertyType] = useState('الجميع');
@@ -18,23 +28,24 @@ export default function PropertiesPage() {
 
   // Filter properties
   let filteredProperties = properties.filter((prop) => {
-    const matchesSearch = prop.title.includes(searchTerm);
+    const matchesSearch = (prop.title ?? '').includes(searchTerm);
     const matchesCategory = category === 'الجميع' ? true : prop.category === category;
     const matchesType = propertyType === 'الجميع' ? true : prop.type === propertyType;
-    const matchesCity = city === 'الجميع' ? true : prop.location.includes(city);
-    const matchesNeighborhood = neighborhood === '' ? true : prop.location.includes(neighborhood);
+    const matchesCity = city === 'الجميع' ? true : (prop.location ?? '').includes(city);
+    const matchesNeighborhood = neighborhood === '' ? true : (prop.location ?? '').includes(neighborhood);
     return matchesSearch && matchesCategory && matchesType && matchesCity && matchesNeighborhood;
   });
 
+  const num = (v: string | null | undefined) => parseInt((v ?? '0').replace(/\D/g, '') || '0', 10);
+
   // Sort properties
   if (sortBy === 'الأرخص') {
-    filteredProperties.sort((a, b) => parseInt(a.price.replace(/\D/g, '')) - parseInt(b.price.replace(/\D/g, '')));
+    filteredProperties.sort((a, b) => num(a.price) - num(b.price));
   } else if (sortBy === 'الأغلى') {
-    filteredProperties.sort((a, b) => parseInt(b.price.replace(/\D/g, '')) - parseInt(a.price.replace(/\D/g, '')));
+    filteredProperties.sort((a, b) => num(b.price) - num(a.price));
   } else if (sortBy === 'المساحة الأكبر') {
-    filteredProperties.sort((a, b) => parseInt(b.area.replace(/\D/g, '')) - parseInt(a.area.replace(/\D/g, '')));
+    filteredProperties.sort((a, b) => num(b.area) - num(a.area));
   } else {
-    // الأحدث -> Default sorting or by ID desc
     filteredProperties.sort((a, b) => Number(b.id) - Number(a.id));
   }
 
@@ -178,8 +189,8 @@ export default function PropertiesPage() {
                 >
                   {/* Image & Badge */}
                   <div className="relative h-48 sm:h-56 overflow-hidden">
-                    <img 
-                      src={prop.image} 
+                    <img
+                      src={prop.image ?? ''}
                       alt={prop.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
@@ -238,7 +249,13 @@ export default function PropertiesPage() {
             ))}
           </AnimatePresence>
           
-          {filteredProperties.length === 0 && (
+          {loading && (
+            <div className="col-span-full py-12 text-center text-gray-500">
+              <p className="text-xl">جاري تحميل العقارات...</p>
+            </div>
+          )}
+
+          {!loading && filteredProperties.length === 0 && (
             <div className="col-span-full py-12 text-center text-gray-500">
               <p className="text-xl">عذراً، لا توجد عقارات تطابق بحثك حالياً.</p>
             </div>

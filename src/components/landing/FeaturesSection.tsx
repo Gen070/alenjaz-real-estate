@@ -1,91 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Bed, Bath, Square, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { getProperties } from '@/lib/queries';
+import type { Property } from '@/lib/supabase';
 
 const categories = ['جميع العقارات', 'فلل', 'شقق', 'أراضي', 'مكاتب', 'تجاري'];
 
-const properties = [
-  {
-    id: '1',
-    title: 'شقة صغيرة (استوديو) إيجار منطقة الرياض',
-    location: 'الرياض, الملقا',
-    price: '25,000 ريال / سنوياً',
-    type: 'للإيجار',
-    category: 'شقق',
-    beds: 1,
-    baths: 1,
-    area: '45 م²',
-    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: '2',
-    title: 'فيلا فاخرة للبيع بتصميم مودرن',
-    location: 'الرياض, الياسمين',
-    price: '2,500,000 ريال',
-    type: 'للبيع',
-    category: 'فلل',
-    beds: 5,
-    baths: 6,
-    area: '450 م²',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: '3',
-    title: 'مكتب تجاري واسع للإيجار',
-    location: 'جدة, الشاطئ',
-    price: '60,000 ريال / سنوياً',
-    type: 'للإيجار',
-    category: 'مكاتب',
-    beds: 0,
-    baths: 2,
-    area: '200 م²',
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: '4',
-    title: 'أرض تجارية على شارعين رئيسية',
-    location: 'الدمام, الفيصلية',
-    price: '3,200,000 ريال',
-    type: 'للبيع',
-    category: 'أراضي',
-    beds: 0,
-    baths: 0,
-    area: '800 م²',
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: '5',
-    title: 'شقة فاخرة مطلة على البحر',
-    location: 'جدة, الكورنيش',
-    price: '85,000 ريال / سنوياً',
-    type: 'للإيجار',
-    category: 'شقق',
-    beds: 3,
-    baths: 3,
-    area: '180 م²',
-    image: 'https://images.unsplash.com/photo-1502672260266-1c1de2d966ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: '6',
-    title: 'فيلا سكنية بتشطيبات راقية',
-    location: 'الرياض, النرجس',
-    price: '1,850,000 ريال',
-    type: 'للبيع',
-    category: 'فلل',
-    beds: 4,
-    baths: 5,
-    area: '320 م²',
-    image: 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  }
-];
-
 export function FeaturesSection() {
   const [activeCategory, setActiveCategory] = useState('جميع العقارات');
+  const [properties, setProperties] = useState<Property[]>([]);
 
-  const filteredProperties = properties.filter(prop => 
+  useEffect(() => {
+    getProperties().then((data) => setProperties(data.slice(0, 6)));
+  }, []);
+
+  const filteredProperties = properties.filter(prop =>
     activeCategory === 'جميع العقارات' ? true : prop.category === activeCategory
   );
 
@@ -176,9 +108,9 @@ export function FeaturesSection() {
                     {property.type}
                   </div>
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-0" />
-                  <img 
-                    src={property.image} 
-                    alt={property.title} 
+                  <img
+                    src={property.image ?? ''}
+                    alt={property.title}
                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>

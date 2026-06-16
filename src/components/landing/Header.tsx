@@ -7,7 +7,7 @@ import { MapPin, Calendar, Clock, ChevronDown, Menu, X } from 'lucide-react';
 const navLinks = [
   { label: 'الرئيسية', href: '/' },
   { label: 'العروض العقارية', href: '/properties', hasDropdown: true },
-  { label: 'تواصل معنا', href: '#contact', hasDropdown: true },
+  { label: 'تواصل معنا', href: '/#contact', hasDropdown: true },
 ];
 
 export function Header() {
