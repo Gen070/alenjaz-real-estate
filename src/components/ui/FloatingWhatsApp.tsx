@@ -4,16 +4,24 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X } from 'lucide-react';
 
-export function FloatingWhatsApp() {
+interface Props {
+  primaryNumber: string;
+  secondaryNumber: string;
+}
+
+export function FloatingWhatsApp({ primaryNumber, secondaryNumber }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const primaryNumber = '9665444666760';
-  const secondaryNumber = '966507007604';
+
+  const formatDisplay = (num: string) => {
+    const clean = num.replace(/^966/, '0');
+    return clean.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3');
+  };
 
   return (
     <div className="fixed bottom-6 left-6 z-50 font-sans" dir="rtl">
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -25,9 +33,9 @@ export function FloatingWhatsApp() {
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="flex flex-col gap-3">
-              <a 
+              <a
                 href={`https://wa.me/${primaryNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -38,11 +46,11 @@ export function FloatingWhatsApp() {
                 </div>
                 <div className="flex flex-col">
                   <span className="font-bold text-gray-800 text-sm">المبيعات الرئيسية</span>
-                  <span className="text-xs text-gray-500" dir="ltr">+966 54 446 6676</span>
+                  <span className="text-xs text-gray-500" dir="ltr">{formatDisplay(primaryNumber)}</span>
                 </div>
               </a>
 
-              <a 
+              <a
                 href={`https://wa.me/${secondaryNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -53,7 +61,7 @@ export function FloatingWhatsApp() {
                 </div>
                 <div className="flex flex-col">
                   <span className="font-bold text-gray-800 text-sm">الدعم الفني</span>
-                  <span className="text-xs text-gray-500" dir="ltr">+966 50 700 7604</span>
+                  <span className="text-xs text-gray-500" dir="ltr">{formatDisplay(secondaryNumber)}</span>
                 </div>
               </a>
             </div>
@@ -61,7 +69,7 @@ export function FloatingWhatsApp() {
         )}
       </AnimatePresence>
 
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-16 h-16 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#25D366]/40 hover:scale-105 hover:shadow-xl transition-all"
       >

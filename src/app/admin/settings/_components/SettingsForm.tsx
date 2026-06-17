@@ -127,22 +127,6 @@ export function SettingsForm({ settings }: { settings: Record<string, string> })
         </div>
       </div>
 
-      {/* متغيرات البيئة */}
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-sm">
-        <p className="font-bold text-amber-800 mb-2">⚙️ متغيرات البيئة المطلوبة في Vercel</p>
-        <p className="text-amber-700 mb-3">
-          تأكد من إضافة هذه المتغيرات في لوحة Vercel ← Settings ← Environment Variables:
-        </p>
-        <div
-          className="space-y-1 font-mono text-xs text-amber-800 bg-amber-100 rounded-xl p-3"
-          dir="ltr"
-        >
-          <p>ADMIN_PASSWORD=كلمة_المرور</p>
-          <p>ADMIN_SESSION_SECRET=سلسلة_عشوائية_طويلة</p>
-          <p>SUPABASE_SERVICE_ROLE_KEY=المفتاح_السري_من_Supabase_Settings</p>
-        </div>
-      </div>
-
       {state.error && (
         <p className="text-red-600 bg-red-50 border border-red-200 p-4 rounded-xl text-sm">
           {state.error}

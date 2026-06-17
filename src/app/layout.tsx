@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Tajawal, Almarai } from "next/font/google";
 import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
+import { getSiteSettings } from "@/lib/queries";
 
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
@@ -20,11 +21,17 @@ export const metadata: Metadata = {
   description: "خيارك الأول لنشر وإدارة إعلاناتك العقارية",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSiteSettings();
+  const whatsappPrimary = settings.whatsapp ?? '966544666760';
+  const whatsappSecondary = settings.phone_2
+    ? `966${settings.phone_2.replace(/^0/, '')}`
+    : '966507007604';
+
   return (
     <html
       lang="ar"
@@ -32,7 +39,12 @@ export default function RootLayout({
       className={`${tajawal.variable} ${almarai.variable} font-sans h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <ClientProviders>{children}</ClientProviders>
+        <ClientProviders
+          whatsappPrimary={whatsappPrimary}
+          whatsappSecondary={whatsappSecondary}
+        >
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );

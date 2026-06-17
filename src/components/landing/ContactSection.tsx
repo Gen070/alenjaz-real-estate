@@ -1,7 +1,18 @@
 import React from 'react';
 import { Phone, MapPin, MessageCircle } from 'lucide-react';
+import { getSiteSettings } from '@/lib/queries';
 
-export function ContactSection() {
+export async function ContactSection() {
+  const settings = await getSiteSettings();
+
+  const phone1 = settings.phone_1 ?? '0544666760';
+  const phone2 = settings.phone_2 ?? '0507007604';
+  const phone3 = settings.phone_3 ?? null;
+  const whatsapp = settings.whatsapp ?? '966544666760';
+  const locationText = settings.location_text ?? 'مكة المكرمة، المملكة العربية السعودية';
+
+  const phones = [phone1, phone2, ...(phone3 ? [phone3] : [])];
+
   return (
     <section id="contact" className="py-24 bg-white border-t border-zinc-100">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -24,7 +35,7 @@ export function ContactSection() {
                   </div>
                   <div>
                     <h4 className="font-bold text-lg text-[var(--color-navy)] mb-1">الموقع</h4>
-                    <p className="text-gray-600 leading-relaxed">مكة المكرمة، المملكة العربية السعودية</p>
+                    <p className="text-gray-600 leading-relaxed">{locationText}</p>
                   </div>
                 </div>
 
@@ -35,15 +46,16 @@ export function ContactSection() {
                   <div>
                     <h4 className="font-bold text-lg text-[var(--color-navy)] mb-2">أرقام التواصل</h4>
                     <div className="space-y-2">
-                      <a href="tel:0544666760" className="block text-gray-600 hover:text-[var(--color-navy)] transition-colors font-medium" dir="ltr">
-                        0544666760
-                      </a>
-                      <a href="tel:0507007604" className="block text-gray-600 hover:text-[var(--color-navy)] transition-colors font-medium" dir="ltr">
-                        0507007604
-                      </a>
-                      <a href="tel:05550330103" className="block text-gray-600 hover:text-[var(--color-navy)] transition-colors font-medium" dir="ltr">
-                        05550330103
-                      </a>
+                      {phones.map((phone) => (
+                        <a
+                          key={phone}
+                          href={`tel:${phone}`}
+                          className="block text-gray-600 hover:text-[var(--color-navy)] transition-colors font-medium"
+                          dir="ltr"
+                        >
+                          {phone}
+                        </a>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -51,7 +63,7 @@ export function ContactSection() {
 
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <a
-                  href="https://wa.me/966544666760"
+                  href={`https://wa.me/${whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex h-14 items-center justify-center rounded-2xl bg-[#25D366] px-8 text-lg font-bold text-white shadow-lg transition-all hover:bg-[#20bd5a] hover:shadow-xl gap-3"
