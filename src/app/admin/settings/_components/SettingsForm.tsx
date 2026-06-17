@@ -19,51 +19,32 @@ export function SettingsForm({ settings }: { settings: Record<string, string> })
     <form action={formAction} className="space-y-6">
       {/* أرقام التواصل */}
       <div className={sectionCls}>
-        <h2 className="font-bold text-[#2D3864] mb-5 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
+        <h2 className="font-bold text-[#2D3864] mb-2 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
           <Phone size={16} />
           أرقام التواصل
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <p className="text-gray-400 text-xs mb-5">تظهر في التذييل وقسم تواصل معنا — أضف ما تحتاجه (حتى 4 أرقام)</p>
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelCls}>رقم الجوال الأول</label>
-            <input
-              name="phone_1"
-              defaultValue={settings.phone_1 ?? ''}
-              placeholder="05XXXXXXXX"
-              className={inputCls}
-              dir="ltr"
-            />
+            <label className={labelCls}>رقم 1</label>
+            <input name="phone_1" defaultValue={settings.phone_1 ?? ''} placeholder="05XXXXXXXX" className={inputCls} dir="ltr" />
           </div>
           <div>
-            <label className={labelCls}>رقم الجوال الثاني</label>
-            <input
-              name="phone_2"
-              defaultValue={settings.phone_2 ?? ''}
-              placeholder="05XXXXXXXX"
-              className={inputCls}
-              dir="ltr"
-            />
+            <label className={labelCls}>رقم 2</label>
+            <input name="phone_2" defaultValue={settings.phone_2 ?? ''} placeholder="05XXXXXXXX" className={inputCls} dir="ltr" />
           </div>
           <div>
-            <label className={labelCls}>رقم الجوال الثالث</label>
-            <input
-              name="phone_3"
-              defaultValue={settings.phone_3 ?? ''}
-              placeholder="05XXXXXXXX"
-              className={inputCls}
-              dir="ltr"
-            />
+            <label className={labelCls}>رقم 3 (اختياري)</label>
+            <input name="phone_3" defaultValue={settings.phone_3 ?? ''} placeholder="05XXXXXXXX" className={inputCls} dir="ltr" />
           </div>
           <div>
-            <label className={labelCls}>رقم الواتساب (مع كود الدولة، بدون +)</label>
-            <input
-              name="whatsapp"
-              defaultValue={settings.whatsapp ?? ''}
-              placeholder="966XXXXXXXXX"
-              className={inputCls}
-              dir="ltr"
-            />
+            <label className={labelCls}>رقم 4 (اختياري)</label>
+            <input name="phone_4" defaultValue={settings.phone_4 ?? ''} placeholder="05XXXXXXXX" className={inputCls} dir="ltr" />
           </div>
+        </div>
+        <div className="mt-4">
+          <label className={labelCls}>رقم الواتساب (مع كود الدولة، بدون +)</label>
+          <input name="whatsapp" defaultValue={settings.whatsapp ?? ''} placeholder="966XXXXXXXXX" className={inputCls} dir="ltr" />
         </div>
       </div>
 

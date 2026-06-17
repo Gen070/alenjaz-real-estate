@@ -204,15 +204,6 @@ export default async function PropertyPage({ params }: { params: Promise<{ id: s
                 ))}
               </div>
 
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <div className="flex items-center gap-4">
-                  <img src="/logo.jpeg" alt="الإنجاز للعقار" className="w-16 h-16 object-contain rounded-full border border-gray-100" />
-                  <div className="text-right">
-                    <p className="font-bold text-[var(--color-navy)]">الإنجاز للعقار</p>
-                    <p className="text-sm text-gray-500">معلن عقاري معتمد</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 

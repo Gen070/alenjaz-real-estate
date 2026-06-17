@@ -261,6 +261,7 @@ export async function updateSettings(
       'phone_1',
       'phone_2',
       'phone_3',
+      'phone_4',
       'whatsapp',
       'location_text',
       'license_fal_url',
