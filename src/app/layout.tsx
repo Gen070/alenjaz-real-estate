@@ -27,10 +27,17 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const settings = await getSiteSettings();
-  const whatsappPrimary = settings.whatsapp ?? '966544666760';
-  const whatsappSecondary = settings.phone_2
-    ? `966${settings.phone_2.replace(/^0/, '')}`
-    : '966507007604';
+
+  const floatingUsers = [
+    {
+      name: settings.user1_name || 'المبيعات الرئيسية',
+      whatsapp: settings.user1_whatsapp || settings.whatsapp || '966544666760',
+    },
+    {
+      name: settings.user2_name || 'الدعم الفني',
+      whatsapp: settings.user2_whatsapp || (settings.phone_2 ? `966${settings.phone_2.replace(/^0/, '')}` : '966507007604'),
+    },
+  ];
 
   return (
     <html
@@ -39,10 +46,7 @@ export default async function RootLayout({
       className={`${tajawal.variable} ${almarai.variable} font-sans h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <ClientProviders
-          whatsappPrimary={whatsappPrimary}
-          whatsappSecondary={whatsappSecondary}
-        >
+        <ClientProviders users={floatingUsers}>
           {children}
         </ClientProviders>
       </body>

@@ -19,11 +19,22 @@ export default async function PropertyPage({ params }: { params: Promise<{ id: s
     notFound();
   }
 
-  const whatsappNumber = settings.whatsapp ?? '966544666760';
-  const callNumber = settings.phone_1 ?? '0544666760';
-  const whatsappMessage = encodeURIComponent(
+  const msgText = encodeURIComponent(
     `مرحباً، أود الاستفسار عن العقار رقم (${property.property_code ?? property.id}): ${property.title}`
   );
+
+  const users = [
+    {
+      name: settings.user1_name || 'المبيعات الرئيسية',
+      phone: settings.user1_phone || settings.phone_1 || '0544666760',
+      whatsapp: settings.user1_whatsapp || settings.whatsapp || '966544666760',
+    },
+    {
+      name: settings.user2_name || 'الدعم الفني',
+      phone: settings.user2_phone || settings.phone_2 || '0507007604',
+      whatsapp: settings.user2_whatsapp || (settings.phone_2 ? `966${settings.phone_2.replace(/^0/, '')}` : '966507007604'),
+    },
+  ].filter(u => u.phone && u.whatsapp);
 
   const images = property.gallery && property.gallery.length > 0
     ? property.gallery
@@ -167,23 +178,30 @@ export default async function PropertyPage({ params }: { params: Promise<{ id: s
                 </div>
               )}
 
-              <div className="space-y-4">
-                <a
-                  href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full bg-[#25D366] text-white px-6 py-4 rounded-xl font-bold text-lg hover:bg-[#20bd5a] transition-colors flex items-center justify-center gap-3 shadow-md hover:shadow-lg"
-                >
-                  <Phone size={24} />
-                  تواصل عبر الواتساب
-                </a>
-                <a
-                  href={`tel:${callNumber}`}
-                  className="w-full bg-white text-[var(--color-navy)] px-6 py-4 rounded-xl font-bold text-lg hover:bg-gray-50 border-2 border-[var(--color-navy)] transition-colors flex items-center justify-center gap-3"
-                >
-                  <Phone size={24} />
-                  اتصال مباشر
-                </a>
+              <div className="space-y-3">
+                {users.map((user) => (
+                  <div key={user.name} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                    <p className="text-xs font-bold text-gray-500 mb-3 text-center">{user.name}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <a
+                        href={`https://wa.me/${user.whatsapp}?text=${msgText}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#25D366] text-white px-3 py-3 rounded-xl font-bold text-sm hover:bg-[#20bd5a] transition-colors flex items-center justify-center gap-2 shadow-sm"
+                      >
+                        <Phone size={16} />
+                        واتساب
+                      </a>
+                      <a
+                        href={`tel:${user.phone}`}
+                        className="bg-white text-[var(--color-navy)] px-3 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 border-2 border-[var(--color-navy)] transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Phone size={16} />
+                        اتصال
+                      </a>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="mt-8 pt-6 border-t border-gray-100">

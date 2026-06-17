@@ -266,6 +266,12 @@ export async function updateSettings(
       'license_fal_url',
       'license_marouf_url',
       'license_sbc_url',
+      'user1_name',
+      'user1_phone',
+      'user1_whatsapp',
+      'user2_name',
+      'user2_phone',
+      'user2_whatsapp',
     ];
 
     const upserts = keys.map((key) => ({

@@ -5,13 +5,20 @@ import { getSiteSettings } from '@/lib/queries';
 export async function ContactSection() {
   const settings = await getSiteSettings();
 
-  const phone1 = settings.phone_1 ?? '0544666760';
-  const phone2 = settings.phone_2 ?? '0507007604';
-  const phone3 = settings.phone_3 ?? null;
-  const whatsapp = settings.whatsapp ?? '966544666760';
   const locationText = settings.location_text ?? 'مكة المكرمة، المملكة العربية السعودية';
 
-  const phones = [phone1, phone2, ...(phone3 ? [phone3] : [])];
+  const users = [
+    {
+      name: settings.user1_name || 'المبيعات الرئيسية',
+      phone: settings.user1_phone || settings.phone_1 || '0544666760',
+      whatsapp: settings.user1_whatsapp || settings.whatsapp || '966544666760',
+    },
+    {
+      name: settings.user2_name || 'الدعم الفني',
+      phone: settings.user2_phone || settings.phone_2 || '0507007604',
+      whatsapp: settings.user2_whatsapp || (settings.phone_2 ? `966${settings.phone_2.replace(/^0/, '')}` : '966507007604'),
+    },
+  ];
 
   return (
     <section id="contact" className="py-24 bg-white border-t border-zinc-100">
@@ -24,59 +31,55 @@ export async function ContactSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
           {/* Left - Contact Info */}
-          <div className="space-y-8">
-            <div className="bg-gray-50 rounded-3xl p-8 border border-gray-100">
-              <h3 className="text-2xl font-bold text-[var(--color-navy)] mb-8">بياناتنا</h3>
+          <div className="space-y-6">
 
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[var(--color-navy)] text-white flex items-center justify-center shrink-0">
-                    <MapPin className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg text-[var(--color-navy)] mb-1">الموقع</h4>
-                    <p className="text-gray-600 leading-relaxed">{locationText}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[var(--color-navy)] text-white flex items-center justify-center shrink-0">
-                    <Phone className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg text-[var(--color-navy)] mb-2">أرقام التواصل</h4>
-                    <div className="space-y-2">
-                      {phones.map((phone) => (
-                        <a
-                          key={phone}
-                          href={`tel:${phone}`}
-                          className="block text-gray-600 hover:text-[var(--color-navy)] transition-colors font-medium"
-                          dir="ltr"
-                        >
-                          {phone}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+            {/* Location */}
+            <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--color-navy)] text-white flex items-center justify-center shrink-0">
+                <MapPin className="w-6 h-6" />
               </div>
-
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <a
-                  href={`https://wa.me/${whatsapp}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex h-14 items-center justify-center rounded-2xl bg-[#25D366] px-8 text-lg font-bold text-white shadow-lg transition-all hover:bg-[#20bd5a] hover:shadow-xl gap-3"
-                >
-                  <MessageCircle className="w-6 h-6" />
-                  تواصل عبر واتساب
-                </a>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 mb-0.5">الموقع</p>
+                <p className="font-bold text-[var(--color-navy)] text-base">{locationText}</p>
               </div>
             </div>
+
+            {/* Users contact cards */}
+            {users.map((user) => (
+              <div key={user.name} className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--color-navy)] text-white flex items-center justify-center shrink-0">
+                    <Phone className="w-5 h-5" />
+                  </div>
+                  <p className="font-bold text-[var(--color-navy)] text-base">{user.name}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <a
+                    href={`https://wa.me/${user.whatsapp}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3 px-4 rounded-xl hover:bg-[#20bd5a] transition-colors text-sm shadow-sm"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    واتساب
+                  </a>
+                  <a
+                    href={`tel:${user.phone}`}
+                    className="flex items-center justify-center gap-2 bg-white text-[var(--color-navy)] font-bold py-3 px-4 rounded-xl border-2 border-[var(--color-navy)] hover:bg-blue-50 transition-colors text-sm"
+                    dir="ltr"
+                  >
+                    <Phone className="w-4 h-4" />
+                    {user.phone}
+                  </a>
+                </div>
+              </div>
+            ))}
+
           </div>
 
           {/* Right - Map */}
-          <div className="w-full h-[450px] bg-zinc-100 rounded-3xl overflow-hidden shadow-lg border border-zinc-200">
+          <div className="w-full h-[480px] bg-zinc-100 rounded-3xl overflow-hidden shadow-lg border border-zinc-200">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4564.111208180004!2d39.69663800000001!3d21.615338299999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x15c1f5e0a6381a0b%3A0x5ac310abe1d011f2!2z2YXZg9iq2Kgg2KfZhNin2YbYrNin2LIg2YTZhNiu2K_Zhdin2Kog2KfZhNi52KfZhdip!5e1!3m2!1sar!2ssa!4v1781573270293!5m2!1sar!2ssa"
               width="100%"

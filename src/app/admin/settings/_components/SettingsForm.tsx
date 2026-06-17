@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { Settings, Phone, MapPin, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Settings, Phone, MapPin, ShieldCheck, CheckCircle2, Users } from 'lucide-react';
 import { updateSettings } from '@/lib/admin-actions';
 
 const inputCls =
@@ -81,6 +81,51 @@ export function SettingsForm({ settings }: { settings: Record<string, string> })
             placeholder="مكة المكرمة، المملكة العربية السعودية"
             className={inputCls}
           />
+        </div>
+      </div>
+
+      {/* المستخدمون */}
+      <div className={sectionCls}>
+        <h2 className="font-bold text-[#2D3864] mb-2 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
+          <Users size={16} />
+          المستخدمون (أزرار التواصل)
+        </h2>
+        <p className="text-gray-400 text-xs mb-5">
+          كل مستخدم له زر واتساب + زر اتصال منفصل في صفحة العقار وزر الواتساب العائم
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* مستخدم 1 */}
+          <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-100">
+            <p className="font-bold text-[#2D3864] text-sm">المستخدم الأول</p>
+            <div>
+              <label className={labelCls}>الاسم / المسمى الوظيفي</label>
+              <input name="user1_name" defaultValue={settings.user1_name ?? 'المبيعات الرئيسية'} className={inputCls} placeholder="مثال: المبيعات الرئيسية" />
+            </div>
+            <div>
+              <label className={labelCls}>رقم الهاتف</label>
+              <input name="user1_phone" defaultValue={settings.user1_phone ?? ''} className={inputCls} placeholder="05XXXXXXXX" dir="ltr" />
+            </div>
+            <div>
+              <label className={labelCls}>رقم الواتساب (مع كود الدولة)</label>
+              <input name="user1_whatsapp" defaultValue={settings.user1_whatsapp ?? ''} className={inputCls} placeholder="966XXXXXXXXX" dir="ltr" />
+            </div>
+          </div>
+          {/* مستخدم 2 */}
+          <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-100">
+            <p className="font-bold text-[#2D3864] text-sm">المستخدم الثاني</p>
+            <div>
+              <label className={labelCls}>الاسم / المسمى الوظيفي</label>
+              <input name="user2_name" defaultValue={settings.user2_name ?? 'الدعم الفني'} className={inputCls} placeholder="مثال: الدعم الفني" />
+            </div>
+            <div>
+              <label className={labelCls}>رقم الهاتف</label>
+              <input name="user2_phone" defaultValue={settings.user2_phone ?? ''} className={inputCls} placeholder="05XXXXXXXX" dir="ltr" />
+            </div>
+            <div>
+              <label className={labelCls}>رقم الواتساب (مع كود الدولة)</label>
+              <input name="user2_whatsapp" defaultValue={settings.user2_whatsapp ?? ''} className={inputCls} placeholder="966XXXXXXXXX" dir="ltr" />
+            </div>
+          </div>
         </div>
       </div>
 

@@ -3,21 +3,23 @@
 import { usePathname } from 'next/navigation';
 import { FloatingWhatsApp } from './ui/FloatingWhatsApp';
 
-interface Props {
-  children: React.ReactNode;
-  whatsappPrimary: string;
-  whatsappSecondary: string;
+interface UserContact {
+  name: string;
+  whatsapp: string;
 }
 
-export function ClientProviders({ children, whatsappPrimary, whatsappSecondary }: Props) {
+interface Props {
+  children: React.ReactNode;
+  users: UserContact[];
+}
+
+export function ClientProviders({ children, users }: Props) {
   const pathname = usePathname();
 
   return (
     <>
       {children}
-      {!pathname.startsWith('/admin') && (
-        <FloatingWhatsApp primaryNumber={whatsappPrimary} secondaryNumber={whatsappSecondary} />
-      )}
+      {!pathname.startsWith('/admin') && <FloatingWhatsApp users={users} />}
     </>
   );
 }
