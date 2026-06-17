@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Phone, MapPin } from 'lucide-react';
 import { getSiteSettings } from '@/lib/queries';
 
@@ -73,9 +74,11 @@ export async function Footer() {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center bg-white border border-gray-200 p-2 rounded-xl hover:border-[#1E40AF] transition-all hover:shadow-md h-16 w-32"
               >
-                <img
+                <Image
                   src="/logos/fal.png"
                   alt="فال FAL"
+                  width={128}
+                  height={64}
                   className="max-h-full max-w-full object-contain"
                 />
               </a>
@@ -85,9 +88,11 @@ export async function Footer() {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center bg-white border border-gray-200 p-2 rounded-xl hover:border-[#047857] transition-all hover:shadow-md h-16 w-32"
               >
-                <img
+                <Image
                   src="/logos/maroof.png"
                   alt="منصة معروف"
+                  width={128}
+                  height={64}
                   className="max-h-full max-w-full object-contain"
                 />
               </a>
@@ -97,9 +102,11 @@ export async function Footer() {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center bg-white border border-gray-200 p-2 rounded-xl hover:border-[#0F172A] transition-all hover:shadow-md h-16 w-32"
               >
-                <img
+                <Image
                   src="/logos/sbc.png"
                   alt="المركز السعودي للأعمال"
+                  width={128}
+                  height={64}
                   className="max-h-full max-w-full object-contain"
                 />
               </a>
@@ -112,9 +119,11 @@ export async function Footer() {
 
         <div className="border-t border-gray-100 pt-8 text-center text-gray-400 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src="/logo.jpeg"
               alt="شعار الانجاز للعقار"
+              width={40}
+              height={40}
               className="w-10 h-10 object-contain rounded-full border border-gray-100 grayscale opacity-70"
             />
             <span className="font-bold text-gray-500">الإنجاز للعقار</span>

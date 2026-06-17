@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 const cities = [
@@ -63,10 +64,12 @@ export function CitiesSection() {
               className="relative group rounded-[2rem] overflow-hidden h-[400px] cursor-pointer"
             >
               <div className="absolute inset-0 z-0">
-                <img 
-                  src={city.image} 
-                  alt={city.name} 
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
+                <Image
+                  src={city.image}
+                  alt={city.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
               </div>
               

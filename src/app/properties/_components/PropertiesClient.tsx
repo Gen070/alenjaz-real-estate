@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import type { Property } from '@/lib/supabase';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Bed, Bath, Square, ArrowLeft, Search, MapPin, SlidersHorizontal, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,7 +15,7 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
   const [neighborhood, setNeighborhood] = useState('');
   const [sortBy, setSortBy] = useState('الأحدث');
 
-  let filteredProperties = properties.filter((prop) => {
+  const filteredProperties = properties.filter((prop) => {
     const matchesSearch = (prop.title ?? '').includes(searchTerm);
     const matchesCategory = category === 'الجميع' ? true : prop.category === category;
     const matchesType = propertyType === 'الجميع' ? true : prop.type === propertyType;
@@ -155,11 +156,17 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
                 className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-gray-100 transition-all group flex flex-col h-full cursor-pointer"
               >
                 <div className="relative h-48 sm:h-56 overflow-hidden">
-                  <img
-                    src={prop.image ?? ''}
-                    alt={prop.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
+                  {prop.image ? (
+                    <Image
+                      src={prop.image}
+                      alt={prop.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200" />
+                  )}
                   <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full shadow-md">
                     <span className="text-[var(--color-navy)] font-bold text-xs">{prop.type}</span>
                   </div>

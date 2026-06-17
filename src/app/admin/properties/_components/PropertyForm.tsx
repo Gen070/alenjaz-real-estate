@@ -203,6 +203,8 @@ export function PropertyForm({ action, property, mode }: Props) {
           {/* Preview */}
           <div className="w-full sm:w-48 h-36 rounded-2xl overflow-hidden bg-gray-100 border-2 border-dashed border-gray-200 flex items-center justify-center shrink-0">
             {imagePreview ? (
+              // معاينة محلية لملف مرفوع (blob:) — next/image لا يدعم blob فنُبقي img
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
             ) : (
               <div className="text-center text-gray-300">

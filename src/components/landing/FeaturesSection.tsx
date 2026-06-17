@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Bed, Bath, Square, ArrowLeft } from 'lucide-react';
+import { MapPin, Bed, Bath, Square } from 'lucide-react';
 import Link from 'next/link';
 import { getProperties } from '@/lib/queries';
 import type { Property } from '@/lib/supabase';
@@ -92,7 +93,7 @@ export function FeaturesSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence mode="popLayout">
-            {filteredProperties.map((property, index) => (
+            {filteredProperties.map((property) => (
               <Link href={`/property/${property.id}`} key={property.id} className="block group">
                 <motion.div
                   layout
@@ -108,11 +109,17 @@ export function FeaturesSection() {
                     {property.type}
                   </div>
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-0" />
-                  <img
-                    src={property.image ?? ''}
-                    alt={property.title}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {property.image ? (
+                    <Image
+                      src={property.image}
+                      alt={property.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transform group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200" />
+                  )}
                 </div>
 
                 {/* Content Box */}

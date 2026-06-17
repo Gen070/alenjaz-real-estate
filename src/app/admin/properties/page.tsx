@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plus, Building2 } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase-admin';
 import type { Property } from '@/lib/supabase';
@@ -71,12 +72,14 @@ export default async function AdminPropertiesPage() {
                 {properties.map((prop) => (
                   <tr key={prop.id} className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-5 py-3">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0">
                         {prop.image ? (
-                          <img
+                          <Image
                             src={prop.image}
                             alt={prop.title}
-                            className="w-full h-full object-cover"
+                            fill
+                            sizes="48px"
+                            className="object-cover"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-300">

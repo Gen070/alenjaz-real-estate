@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Calendar, Clock, ChevronDown, Menu, X } from 'lucide-react';
 
 const navLinks = [
@@ -16,6 +17,8 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    // مطلوب لتجنّب اختلاف الترطيب (hydration) بين الخادم والعميل عند عرض الوقت/التاريخ
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const timer = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(timer);
@@ -63,7 +66,7 @@ export function Header() {
         {/* Logo + Desktop Nav */}
         <div className="flex items-center gap-8 lg:gap-12">
           <Link href="/" className="flex items-center gap-3 shrink-0">
-            <img src="/logo.jpeg" alt="شعار الانجاز للعقار" className="w-11 h-11 md:w-14 md:h-14 object-contain rounded-full border border-gray-100 shadow-sm" />
+            <Image src="/logo.jpeg" alt="شعار الانجاز للعقار" width={56} height={56} className="w-11 h-11 md:w-14 md:h-14 object-contain rounded-full border border-gray-100 shadow-sm" />
             <div className="flex flex-col">
               <h1 className="text-lg md:text-2xl font-extrabold text-[#0B4A5D] tracking-wide leading-tight">الإنجاز للعقار</h1>
               <span className="text-[9px] md:text-[10px] text-gray-500 tracking-wider font-bold">ALENJAZ REAL ESTATE</span>

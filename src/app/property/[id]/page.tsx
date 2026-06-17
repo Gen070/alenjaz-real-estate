@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { MapPin, Phone, Share2, Info, FileText, Map as MapIcon } from 'lucide-react';
 import { Header } from '@/components/landing/Header';
@@ -68,7 +69,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ id: s
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 h-[400px] sm:h-[500px]">
           <div className="md:col-span-3 h-full rounded-2xl overflow-hidden relative group bg-gray-200">
             {images[0] && (
-              <img src={images[0]} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <Image src={images[0]} alt={property.title} fill sizes="(max-width: 768px) 100vw, 75vw" className="object-cover group-hover:scale-105 transition-transform duration-700" priority />
             )}
             {property.status && (
               <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-1.5 rounded-full text-sm font-bold text-[var(--color-navy)] shadow-sm">
@@ -89,7 +90,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ id: s
             <div className="flex-1 rounded-2xl overflow-hidden relative group bg-gray-200">
               {images[1] && (
                 <>
-                  <img src={images[1]} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <Image src={images[1]} alt={property.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer hover:bg-black/30 transition-colors">
                     <span className="text-white font-bold text-lg">+ صور</span>
                   </div>

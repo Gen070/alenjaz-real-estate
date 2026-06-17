@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from './supabase-admin';
+import { createSessionToken, secureEquals, SESSION_MAX_AGE_SECONDS } from './admin-session';
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -19,16 +20,17 @@ export async function loginAdmin(
     return { error: 'متغيرات البيئة (ADMIN_PASSWORD / ADMIN_SESSION_SECRET) غير مضبوطة' };
   }
 
-  if (!password || password !== expected) {
+  if (!password || !(await secureEquals(password, expected))) {
     return { error: 'كلمة المرور غير صحيحة' };
   }
 
+  const token = await createSessionToken(secret);
   const cookieStore = await cookies();
-  cookieStore.set('admin_session', secret, {
+  cookieStore.set('admin_session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: SESSION_MAX_AGE_SECONDS,
     path: '/',
   });
 

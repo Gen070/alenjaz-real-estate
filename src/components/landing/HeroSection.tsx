@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin } from 'lucide-react';
 
@@ -108,9 +109,11 @@ export function HeroSection() {
               className="mb-8 inline-block"
             >
               <div className="w-24 h-24 bg-white rounded-3xl shadow-2xl border border-white/20 flex items-center justify-center overflow-hidden p-2">
-                <img
+                <Image
                   src="/logo.jpeg"
                   alt="الإنجاز للعقار"
+                  width={80}
+                  height={80}
                   className="w-full h-full object-contain rounded-2xl"
                 />
               </div>
