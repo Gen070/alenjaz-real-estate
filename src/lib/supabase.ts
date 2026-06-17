@@ -31,3 +31,13 @@ export type SiteSetting = {
   key: string;
   value: string;
 };
+
+export type Message = {
+  id: number;
+  name: string;
+  phone: string;
+  request_type: string | null;
+  details: string | null;
+  is_read: boolean;
+  created_at: string;
+};

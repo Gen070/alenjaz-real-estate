@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Tajawal, Almarai } from "next/font/google";
 import "./globals.css";
-import { FloatingWhatsApp } from "@/components/ui/FloatingWhatsApp";
+import { ClientProviders } from "@/components/ClientProviders";
 
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
@@ -32,8 +32,7 @@ export default function RootLayout({
       className={`${tajawal.variable} ${almarai.variable} font-sans h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        {children}
-        <FloatingWhatsApp />
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );
