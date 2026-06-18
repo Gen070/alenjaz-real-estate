@@ -1,10 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { MapPin, Phone, Share2, Info, FileText, Map as MapIcon } from 'lucide-react';
+import { MapPin, Phone, Share2, Info, FileText } from 'lucide-react';
 import { Header } from '@/components/landing/Header';
 import { Footer } from '@/components/landing/Footer';
+import { PropertyGallery } from './_components/PropertyGallery';
 import { getPropertyById, getSiteSettings } from '@/lib/queries';
 
 export const revalidate = 60;
@@ -66,39 +66,7 @@ export default async function PropertyPage({ params }: { params: Promise<{ id: s
         </div>
 
         {/* Image Gallery */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 h-[400px] sm:h-[500px]">
-          <div className="md:col-span-3 h-full rounded-2xl overflow-hidden relative group bg-gray-200">
-            {images[0] && (
-              <Image src={images[0]} alt={property.title} fill sizes="(max-width: 768px) 100vw, 75vw" className="object-cover group-hover:scale-105 transition-transform duration-700" priority />
-            )}
-            {property.status && (
-              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-1.5 rounded-full text-sm font-bold text-[var(--color-navy)] shadow-sm">
-                {property.status}
-              </div>
-            )}
-            {property.usage && (
-              <div className="absolute top-4 right-20 bg-white/90 backdrop-blur px-4 py-1.5 rounded-full text-sm font-bold text-gray-700 shadow-sm">
-                {property.usage}
-              </div>
-            )}
-          </div>
-          <div className="hidden md:flex flex-col gap-4 h-full">
-            <div className="flex-1 rounded-2xl overflow-hidden relative bg-gray-200 flex items-center justify-center border border-gray-200">
-              <MapIcon size={40} className="text-gray-400 mb-2" />
-              <span className="absolute bottom-4 text-sm font-medium text-gray-600">عرض على الخريطة</span>
-            </div>
-            <div className="flex-1 rounded-2xl overflow-hidden relative group bg-gray-200">
-              {images[1] && (
-                <>
-                  <Image src={images[1]} alt={property.title} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer hover:bg-black/30 transition-colors">
-                    <span className="text-white font-bold text-lg">+ صور</span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+        <PropertyGallery images={images} title={property.title} />
 
         {/* Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

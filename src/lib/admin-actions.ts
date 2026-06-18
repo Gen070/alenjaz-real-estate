@@ -124,6 +124,7 @@ export async function createProperty(
         details,
         status: (formData.get('status') as string) || 'متاح',
         is_published: formData.get('is_published') === 'true',
+        created_at: new Date().toISOString(),
       },
     ]);
 
