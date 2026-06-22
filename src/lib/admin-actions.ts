@@ -4,23 +4,49 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from './supabase-admin';
-import { createSessionToken, secureEquals, SESSION_MAX_AGE_SECONDS } from './admin-session';
+import {
+  createSessionToken,
+  secureEquals,
+  hashSecret,
+  verifyAgainstHash,
+  SESSION_MAX_AGE_SECONDS,
+} from './admin-session';
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
+
+// يتحقق من كلمة سر اللوحة: المخزّنة في قاعدة البيانات أولاً، وإلا المتغيّر البيئي.
+async function verifyAdminPassword(password: string): Promise<boolean> {
+  if (!password) return false;
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from('admin_auth')
+      .select('password_hash')
+      .eq('id', 1)
+      .maybeSingle();
+    if (data?.password_hash) {
+      return verifyAgainstHash(password, data.password_hash as string);
+    }
+  } catch {
+    // قاعدة البيانات غير متاحة — نسقط للمتغيّر البيئي
+  }
+  const expected = process.env.ADMIN_PASSWORD;
+  if (!expected) return false;
+  return secureEquals(password, expected);
+}
 
 export async function loginAdmin(
   prevState: { error: string | null },
   formData: FormData
 ): Promise<{ error: string | null }> {
   const password = formData.get('password') as string;
-  const expected = process.env.ADMIN_PASSWORD;
   const secret = process.env.ADMIN_SESSION_SECRET;
 
-  if (!expected || !secret) {
-    return { error: 'متغيرات البيئة (ADMIN_PASSWORD / ADMIN_SESSION_SECRET) غير مضبوطة' };
+  if (!secret) {
+    return { error: 'متغيّر البيئة ADMIN_SESSION_SECRET غير مضبوط' };
   }
 
-  if (!password || !(await secureEquals(password, expected))) {
+  if (!(await verifyAdminPassword(password))) {
     return { error: 'كلمة المرور غير صحيحة' };
   }
 
@@ -296,5 +322,43 @@ export async function updateSettings(
   } catch (err) {
     console.error('updateSettings error:', err);
     return { error: 'حدث خطأ أثناء حفظ الإعدادات', success: false };
+  }
+}
+
+// ─── تغيير كلمة سر اللوحة ─────────────────────────────────────────────────────
+
+export async function changeAdminPassword(
+  prevState: SettingsActionState,
+  formData: FormData
+): Promise<SettingsActionState> {
+  try {
+    const current = formData.get('current_password') as string;
+    const next = formData.get('new_password') as string;
+    const confirm = formData.get('confirm_password') as string;
+
+    if (!next || next.length < 6) {
+      return { error: 'كلمة المرور الجديدة قصيرة (6 أحرف على الأقل)', success: false };
+    }
+    if (next !== confirm) {
+      return { error: 'كلمتا المرور غير متطابقتين', success: false };
+    }
+    if (!(await verifyAdminPassword(current))) {
+      return { error: 'كلمة المرور الحالية غير صحيحة', success: false };
+    }
+
+    const admin = createAdminClient();
+    const hash = await hashSecret(next);
+    const { error } = await admin
+      .from('admin_auth')
+      .upsert(
+        { id: 1, password_hash: hash, updated_at: new Date().toISOString() },
+        { onConflict: 'id' }
+      );
+    if (error) throw error;
+
+    return { error: null, success: true };
+  } catch (err) {
+    console.error('changeAdminPassword error:', err);
+    return { error: 'حدث خطأ أثناء تغيير كلمة المرور', success: false };
   }
 }

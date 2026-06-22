@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import type { SiteSetting } from '@/lib/supabase';
 import { SettingsForm } from './_components/SettingsForm';
+import { PasswordForm } from './_components/PasswordForm';
 
 export const revalidate = 0;
 
@@ -22,6 +23,9 @@ export default async function AdminSettingsPage() {
         </p>
       </div>
       <SettingsForm settings={settings} />
+      <div className="mt-6">
+        <PasswordForm />
+      </div>
     </div>
   );
 }

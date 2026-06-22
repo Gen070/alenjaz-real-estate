@@ -56,6 +56,19 @@ export async function secureEquals(a: string, b: string): Promise<boolean> {
   return timingSafeEqual(ha, hb);
 }
 
+/** يُنتج تجزئة (SHA-256 base64url) لتخزين كلمة سر اللوحة في قاعدة البيانات. */
+export async function hashSecret(value: string): Promise<string> {
+  return sha256B64(value);
+}
+
+/** يقارن قيمة خام بتجزئة مخزّنة، مقارنة ثابتة الزمن. */
+export async function verifyAgainstHash(
+  value: string,
+  hash: string
+): Promise<boolean> {
+  return timingSafeEqual(await sha256B64(value), hash);
+}
+
 /** ينشئ رمز جلسة موقّعاً ينتهي بعد SESSION_MAX_AGE_SECONDS. */
 export async function createSessionToken(secret: string): Promise<string> {
   const payload = { exp: Date.now() + SESSION_MAX_AGE_SECONDS * 1000 };
