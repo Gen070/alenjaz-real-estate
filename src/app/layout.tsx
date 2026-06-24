@@ -16,9 +16,43 @@ const almarai = Almarai({
   variable: "--font-almarai",
 });
 
+const SITE_URL = "https://alenjaz-real-estate.vercel.app";
+
 export const metadata: Metadata = {
-  title: "الإنجاز للعقار",
-  description: "خيارك الأول لنشر وإدارة إعلاناتك العقارية",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "الإنجاز للعقار — عقارات للبيع والإيجار في مكة المكرمة",
+    template: "%s | الإنجاز للعقار",
+  },
+  description:
+    "الإنجاز للعقار — مكتب عقاري في مكة المكرمة لعرض وإدارة العقارات للبيع والإيجار: فلل، شقق، أراضٍ، مكاتب وعقارات تجارية.",
+  keywords: [
+    "عقارات",
+    "عقارات مكة",
+    "عقار للبيع",
+    "عقار للإيجار",
+    "فلل للبيع",
+    "شقق للإيجار",
+    "أراضي",
+    "الإنجاز للعقار",
+  ],
+  applicationName: "الإنجاز للعقار",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "ar_SA",
+    siteName: "الإنجاز للعقار",
+    title: "الإنجاز للعقار — عقارات للبيع والإيجار في مكة المكرمة",
+    description:
+      "تصفّح أحدث العقارات للبيع والإيجار في مكة المكرمة مع الإنجاز للعقار.",
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "الإنجاز للعقار",
+    description: "عقارات للبيع والإيجار في مكة المكرمة.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default async function RootLayout({

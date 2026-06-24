@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MapPin, Phone, Share2, Info, FileText } from 'lucide-react';
@@ -8,6 +9,47 @@ import { PropertyGallery } from './_components/PropertyGallery';
 import { getPropertyById, getSiteSettings } from '@/lib/queries';
 
 export const revalidate = 60;
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> }
+): Promise<Metadata> {
+  const { id } = await params;
+  const property = await getPropertyById(id);
+
+  if (!property) {
+    return { title: 'العقار غير موجود' };
+  }
+
+  const parts = [
+    property.title,
+    property.type,
+    property.location ? `في ${property.location}` : '',
+  ].filter(Boolean);
+  const title = parts.join(' — ');
+
+  const description =
+    property.description?.slice(0, 160) ||
+    `${property.title}${property.location ? ` في ${property.location}` : ''} — ${property.price ?? ''}. تواصل مع الإنجاز للعقار.`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/property/${property.id}` },
+    openGraph: {
+      type: 'article',
+      title,
+      description,
+      url: `/property/${property.id}`,
+      images: property.image ? [{ url: property.image }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: property.image ? [property.image] : undefined,
+    },
+  };
+}
 
 export default async function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -41,8 +83,25 @@ export default async function PropertyPage({ params }: { params: Promise<{ id: s
     ? property.gallery
     : (property.image ? [property.image] : []);
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: property.title,
+    description: property.description ?? undefined,
+    url: `https://alenjaz-real-estate.vercel.app/property/${property.id}`,
+    image: images.length ? images : undefined,
+    ...(property.location ? { address: { '@type': 'PostalAddress', addressLocality: property.location } } : {}),
+    ...(property.area ? { floorSize: { '@type': 'QuantitativeValue', value: property.area } } : {}),
+    ...(property.beds ? { numberOfRooms: property.beds } : {}),
+    provider: { '@type': 'RealEstateAgent', name: 'الإنجاز للعقار' },
+  };
+
   return (
     <main className="min-h-screen flex flex-col font-sans bg-gray-50 text-right" dir="rtl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
 
       <div className="container mx-auto px-4 py-8 max-w-6xl flex-grow">
