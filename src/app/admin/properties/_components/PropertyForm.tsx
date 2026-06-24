@@ -33,8 +33,9 @@ export function PropertyForm({ action, property, mode }: Props) {
     property?.details ?? []
   );
 
-  // Gallery URLs
+  // Gallery URLs + uploaded files (من الجهاز)
   const [galleryUrls, setGalleryUrls] = useState<string[]>(property?.gallery ?? []);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
 
   // Main image preview
   const [imagePreview, setImagePreview] = useState<string | null>(property?.image ?? null);
@@ -284,15 +285,48 @@ export function PropertyForm({ action, property, mode }: Props) {
             <p className="text-gray-400 text-sm">لا توجد صور في المعرض حتى الآن</p>
           )}
         </div>
-        <button
-          type="button"
-          onClick={addGalleryUrl}
-          className="flex items-center gap-2 text-[#2D3864] bg-[#DEF4FC] hover:bg-[#2D3864] hover:text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-        >
-          <Plus size={16} /> إضافة رابط صورة
-        </button>
+        {/* معاينات الصور المرفوعة من الجهاز */}
+        {galleryFiles.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {galleryFiles.map((file, i) => (
+              <div
+                key={i}
+                className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 group"
+              >
+                {/* معاينة blob محلية — next/image لا يدعم blob */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={`صورة ${i + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          <label className="flex items-center gap-2 bg-[#2D3864] text-white hover:bg-[#3e4a7a] px-4 py-2 rounded-xl cursor-pointer text-sm font-medium transition-colors">
+            <Upload size={16} /> رفع صور من الجهاز
+            <input
+              type="file"
+              name="gallery_files"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => setGalleryFiles(Array.from(e.target.files ?? []))}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={addGalleryUrl}
+            className="flex items-center gap-2 text-[#2D3864] bg-[#DEF4FC] hover:bg-[#2D3864] hover:text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+          >
+            <Plus size={16} /> إضافة رابط صورة
+          </button>
+        </div>
         <p className="text-gray-400 text-xs mt-3">
-          ارفع الصور عبر لوحة Supabase Storage، ثم الصق الروابط هنا
+          تقدر ترفع صوراً من جهازك مباشرة، أو تلصق روابط صور خارجية.
         </p>
       </div>
 

@@ -11,28 +11,26 @@ const bgImages = [
   '/images/bg-side-2.jpg'
 ];
 
-const newOffers = [
+export interface HeroOffer {
+  image: string;
+  title: string;
+  price: string;
+  location: string;
+}
+
+// بيانات احتياطية تظهر فقط لو ما فيه عقارات منشورة بعد
+const fallbackOffers: HeroOffer[] = [
   {
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    title: 'فيلا فاخرة للبيع',
-    price: '2,500,000 ر.س',
-    location: 'الرياض، الياسمين'
+    image:
+      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    title: 'أحدث العقارات',
+    price: 'تصفّح العروض',
+    location: 'الإنجاز للعقار',
   },
-  {
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    title: 'مكتب تجاري واسع',
-    price: '60,000 ر.س / سنوياً',
-    location: 'جدة، الشاطئ'
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1502672260266-1c1de2d966ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    title: 'شقة فاخرة مطلة على البحر',
-    price: '85,000 ر.س / سنوياً',
-    location: 'جدة، الكورنيش'
-  }
 ];
 
-export function HeroSection() {
+export function HeroSection({ offers }: { offers?: HeroOffer[] }) {
+  const newOffers = offers && offers.length > 0 ? offers : fallbackOffers;
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
   const [currentBoxIndex, setCurrentBoxIndex] = useState(0);
 
@@ -46,13 +44,15 @@ export function HeroSection() {
 
   // Box Slideshow Effect
   useEffect(() => {
+    const len = newOffers.length;
+    if (len <= 1) return;
     const boxTimer = setInterval(() => {
-      setCurrentBoxIndex((prev) => (prev + 1) % newOffers.length);
+      setCurrentBoxIndex((prev) => (prev + 1) % len);
     }, 5000);
     return () => clearInterval(boxTimer);
-  }, []);
+  }, [newOffers.length]);
 
-  const currentOffer = newOffers[currentBoxIndex];
+  const currentOffer = newOffers[currentBoxIndex % newOffers.length];
 
   return (
     <section className="relative w-full min-h-[85vh] flex items-center bg-[#0a0a0a] overflow-hidden" dir="rtl">

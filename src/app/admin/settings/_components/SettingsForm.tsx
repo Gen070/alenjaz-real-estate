@@ -1,7 +1,7 @@
 'use client';
 
-import { useActionState } from 'react';
-import { Settings, Phone, MapPin, ShieldCheck, CheckCircle2, Users } from 'lucide-react';
+import { useActionState, useState } from 'react';
+import { Settings, Phone, MapPin, ShieldCheck, CheckCircle2, Users, Building2, Upload, X } from 'lucide-react';
 import { updateSettings } from '@/lib/admin-actions';
 
 const inputCls =
@@ -110,6 +110,22 @@ export function SettingsForm({ settings }: { settings: Record<string, string> })
         </div>
       </div>
 
+      {/* صور المدن */}
+      <div className={sectionCls}>
+        <h2 className="font-bold text-[#2D3864] mb-2 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
+          <Building2 size={16} />
+          صور المدن
+        </h2>
+        <p className="text-gray-400 text-xs mb-5">
+          الصور الظاهرة في قسم &quot;نغطي أهم مدن المملكة&quot; بالصفحة الرئيسية — ارفعها من جهازك أو الصق رابطاً
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CityImageField cityKey="city_riyadh_image" label="الرياض" defaultUrl={settings.city_riyadh_image ?? ''} />
+          <CityImageField cityKey="city_jeddah_image" label="جدة" defaultUrl={settings.city_jeddah_image ?? ''} />
+          <CityImageField cityKey="city_madinah_image" label="المدينة المنورة" defaultUrl={settings.city_madinah_image ?? ''} />
+        </div>
+      </div>
+
       {/* التراخيص */}
       <div className={sectionCls}>
         <h2 className="font-bold text-[#2D3864] mb-2 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
@@ -175,5 +191,74 @@ export function SettingsForm({ settings }: { settings: Record<string, string> })
         {isPending ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
       </button>
     </form>
+  );
+}
+
+function CityImageField({
+  cityKey,
+  label,
+  defaultUrl,
+}: {
+  cityKey: string;
+  label: string;
+  defaultUrl: string;
+}) {
+  const [urlValue, setUrlValue] = useState(defaultUrl);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const display = filePreview || urlValue || null;
+
+  return (
+    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-3">
+      <p className="font-bold text-[#2D3864] text-sm text-center">{label}</p>
+
+      <div className="w-full h-28 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+        {display ? (
+          // معاينة (قد تكون blob محلي) — next/image لا يدعم blob
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={display} alt={label} className="w-full h-full object-cover" />
+        ) : (
+          <Building2 size={28} className="text-gray-300" />
+        )}
+      </div>
+
+      <label className="flex items-center justify-center gap-2 bg-[#DEF4FC] text-[#2D3864] hover:bg-[#2D3864] hover:text-white px-3 py-2 rounded-lg cursor-pointer text-xs font-medium transition-colors">
+        <Upload size={14} /> رفع من الجهاز
+        <input
+          type="file"
+          name={`${cityKey}_file`}
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) setFilePreview(URL.createObjectURL(file));
+          }}
+        />
+      </label>
+
+      <input
+        name={cityKey}
+        value={urlValue}
+        onChange={(e) => {
+          setUrlValue(e.target.value);
+          setFilePreview(null);
+        }}
+        placeholder="أو رابط صورة"
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#2D3864] bg-white text-xs"
+        dir="ltr"
+      />
+
+      {display && (
+        <button
+          type="button"
+          onClick={() => {
+            setUrlValue('');
+            setFilePreview(null);
+          }}
+          className="text-red-400 hover:text-red-600 text-xs flex items-center gap-1 mx-auto"
+        >
+          <X size={12} /> إزالة
+        </button>
+      )}
+    </div>
   );
 }

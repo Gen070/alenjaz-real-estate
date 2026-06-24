@@ -4,31 +4,46 @@ import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 
-const cities = [
-  {
-    id: 1,
-    name: 'الرياض',
-    description: 'قلب المملكة النابض بالاستثمارات',
-    image: 'https://images.unsplash.com/photo-1588614959060-4d144f28b207?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    propertiesCount: '124 عقار',
-  },
-  {
-    id: 2,
-    name: 'جدة',
-    description: 'عروس البحر الأحمر وواجهة الأعمال',
-    image: 'https://images.unsplash.com/photo-1590240402283-8208945fb220?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    propertiesCount: '86 عقار',
-  },
-  {
-    id: 3,
-    name: 'المدينة المنورة',
-    description: 'طيبة الطيبة وسوق واعد ومتنامي',
-    image: 'https://images.unsplash.com/photo-1591144078433-286a01211786?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    propertiesCount: '45 عقار',
-  }
-];
+export interface CityImages {
+  riyadh?: string;
+  jeddah?: string;
+  madinah?: string;
+}
 
-export function CitiesSection() {
+const FALLBACK = {
+  riyadh:
+    'https://images.unsplash.com/photo-1578895101408-1a36b834405b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  jeddah:
+    'https://images.unsplash.com/photo-1604999333679-b86d54738315?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+  madinah:
+    'https://images.unsplash.com/photo-1565019011521-b0575cbb57c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+};
+
+export function CitiesSection({ images }: { images?: CityImages }) {
+  const cities = [
+    {
+      id: 1,
+      name: 'الرياض',
+      description: 'قلب المملكة النابض بالاستثمارات',
+      image: images?.riyadh || FALLBACK.riyadh,
+      propertiesCount: 'استكشف العروض',
+    },
+    {
+      id: 2,
+      name: 'جدة',
+      description: 'عروس البحر الأحمر وواجهة الأعمال',
+      image: images?.jeddah || FALLBACK.jeddah,
+      propertiesCount: 'استكشف العروض',
+    },
+    {
+      id: 3,
+      name: 'المدينة المنورة',
+      description: 'طيبة الطيبة وسوق واعد ومتنامي',
+      image: images?.madinah || FALLBACK.madinah,
+      propertiesCount: 'استكشف العروض',
+    },
+  ];
+
   return (
     <section className="py-24 bg-white relative">
       <div className="container mx-auto px-4">

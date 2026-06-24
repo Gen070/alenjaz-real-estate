@@ -309,6 +309,18 @@ export async function updateSettings(
       value: (formData.get(key) as string) ?? '',
     }));
 
+    // صور المدن: رفع من الجهاز إن وُجد ملف، وإلا القيمة النصية (رابط)
+    const cityKeys = ['city_riyadh_image', 'city_jeddah_image', 'city_madinah_image'];
+    for (const cityKey of cityKeys) {
+      const file = formData.get(`${cityKey}_file`) as File;
+      let value = (formData.get(cityKey) as string) ?? '';
+      if (file && file.size > 0) {
+        const uploaded = await uploadImage(file);
+        if (uploaded) value = uploaded;
+      }
+      upserts.push({ key: cityKey, value });
+    }
+
     const { error } = await admin
       .from('site_settings')
       .upsert(upserts, { onConflict: 'key' });
