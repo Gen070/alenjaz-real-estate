@@ -3,9 +3,10 @@
 import { useActionState, useState } from 'react';
 import {
   Phone, MapPin, ShieldCheck, CheckCircle2,
-  Users, Building2, Upload, X, Save, Link as LinkIcon,
+  Users, Building2, Upload, X, Save, Link as LinkIcon, Loader2,
 } from 'lucide-react';
 import { updateSettings } from '@/lib/admin-actions';
+import { uploadImageDirect } from '@/lib/upload-client';
 
 const inputCls =
   'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#2D3864]/25 focus:border-[#2D3864] focus:bg-white transition-all bg-gray-50 text-sm text-gray-800 placeholder:text-gray-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.05)]';
@@ -215,21 +216,38 @@ export function SettingsForm({ settings }: { settings: Record<string, string> })
 }
 
 // ─── CityImageField ───────────────────────────────────────────────────────────
+// الصورة تُرفع مباشرةً إلى Supabase (تتخطّى حدّ Vercel 4.5MB) ويُحفظ رابطها في الحقل.
 function CityImageField({ cityKey, label, defaultUrl }: { cityKey: string; label: string; defaultUrl: string }) {
-  const [urlValue,    setUrlValue]    = useState(defaultUrl);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
-  const display = filePreview || urlValue || null;
+  const [urlValue,  setUrlValue]  = useState(defaultUrl);
+  const [uploading, setUploading] = useState(false);
+  const [error,     setError]     = useState(false);
+
+  async function handleFile(file: File | undefined) {
+    if (!file) return;
+    setError(false);
+    setUploading(true);
+    try {
+      const url = await uploadImageDirect(file);
+      setUrlValue(url);
+    } catch {
+      setError(true);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div className="border border-gray-100 rounded-xl overflow-hidden">
       <div className="relative w-full h-20 bg-gray-50 flex items-center justify-center">
-        {display ? (
+        {uploading ? (
+          <Loader2 size={18} className="text-[#2D3864] animate-spin" />
+        ) : urlValue ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={display} alt={label} className="w-full h-full object-cover" />
+            <img src={urlValue} alt={label} className="w-full h-full object-cover" />
             <button
               type="button"
-              onClick={() => { setUrlValue(''); setFilePreview(null); }}
+              onClick={() => setUrlValue('')}
               className="absolute top-1 left-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow hover:bg-red-600 transition-colors"
             >
               <X size={10} />
@@ -241,23 +259,32 @@ function CityImageField({ cityKey, label, defaultUrl }: { cityKey: string; label
       </div>
       <div className="p-2 border-t border-gray-100 space-y-1.5">
         <p className="font-bold text-gray-700 text-[11px] text-center">{label}</p>
-        <label className="flex items-center justify-center gap-1 bg-[#2D3864] text-white hover:bg-[#1a2340] px-2 py-1.5 rounded-lg cursor-pointer text-[10px] font-medium transition-colors w-full">
-          <Upload size={10} /> رفع
-          <input type="file" name={`${cityKey}_file`} accept="image/*" className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) { setFilePreview(URL.createObjectURL(file)); setUrlValue(''); }
-            }}
+        <input type="hidden" name={cityKey} value={urlValue} />
+        <label
+          className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-colors w-full ${
+            uploading
+              ? 'bg-gray-200 text-gray-400 cursor-wait'
+              : 'bg-[#2D3864] text-white hover:bg-[#1a2340] cursor-pointer'
+          }`}
+        >
+          {uploading ? <Loader2 size={10} className="animate-spin" /> : <Upload size={10} />}
+          {uploading ? 'جاري الرفع...' : 'رفع'}
+          <input
+            type="file"
+            accept="image/*"
+            disabled={uploading}
+            className="hidden"
+            onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ''; }}
           />
         </label>
         <input
-          name={cityKey}
           value={urlValue}
-          onChange={(e) => { setUrlValue(e.target.value); setFilePreview(null); }}
-          placeholder="رابط..."
+          onChange={(e) => setUrlValue(e.target.value)}
+          placeholder="أو رابط..."
           className="w-full border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-[#2D3864]/30 focus:border-[#2D3864] bg-gray-50 text-[10px] placeholder:text-gray-300 transition-all"
           dir="ltr"
         />
+        {error && <p className="text-red-500 text-[9px] text-center">فشل الرفع — حاول مجدداً</p>}
       </div>
     </div>
   );

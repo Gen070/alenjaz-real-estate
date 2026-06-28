@@ -1,12 +1,13 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus, X, Upload, ImageIcon, Save, ArrowRight,
-  Info, LayoutGrid, Star, Eye, EyeOff, Images,
+  Info, LayoutGrid, Star, Eye, EyeOff, Images, Loader2,
 } from 'lucide-react';
 import type { Property } from '@/lib/supabase';
+import { uploadImageDirect, uploadImagesDirect } from '@/lib/upload-client';
 
 type ActionFn = (
   prevState: { error: string | null; success: boolean },
@@ -90,27 +91,27 @@ function ComboSelect({
 }
 
 // ─── GalleryGrid ─────────────────────────────────────────────────────────────
-type GalleryItem = { url: string; file?: File };
-
 function GalleryGrid({
-  items,
+  urls,
+  uploading,
   onRemove,
   onAdd,
 }: {
-  items: GalleryItem[];
+  urls: string[];
+  uploading: boolean;
   onRemove: (i: number) => void;
   onAdd: (files: FileList | null) => void;
 }) {
   return (
     <div className="grid grid-cols-3 gap-2">
-      {items.map((item, i) => (
+      {urls.map((url, i) => (
         <div
-          key={i}
+          key={url + i}
           className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group bg-gray-50"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={item.url}
+            src={url}
             alt={`صورة ${i + 1}`}
             className="w-full h-full object-cover"
           />
@@ -121,24 +122,34 @@ function GalleryGrid({
           >
             <X size={11} />
           </button>
-          {item.file && (
-            <div className="absolute bottom-1 right-1 bg-black/40 text-white text-[9px] px-1.5 py-0.5 rounded-full">
-              جديد
-            </div>
-          )}
         </div>
       ))}
       {/* Add button */}
-      <label className="aspect-square rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:border-[#2D3864] hover:bg-[#2D3864]/5 transition-colors group">
-        <Upload size={18} className="text-gray-300 group-hover:text-[#2D3864] transition-colors mb-1" />
-        <span className="text-[10px] text-gray-300 group-hover:text-[#2D3864] transition-colors">إضافة</span>
+      <label
+        className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-colors group ${
+          uploading
+            ? 'border-[#2D3864] bg-[#2D3864]/5 cursor-wait'
+            : 'border-gray-200 cursor-pointer hover:border-[#2D3864] hover:bg-[#2D3864]/5'
+        }`}
+      >
+        {uploading ? (
+          <>
+            <Loader2 size={18} className="text-[#2D3864] animate-spin mb-1" />
+            <span className="text-[10px] text-[#2D3864]">جاري الرفع...</span>
+          </>
+        ) : (
+          <>
+            <Upload size={18} className="text-gray-300 group-hover:text-[#2D3864] transition-colors mb-1" />
+            <span className="text-[10px] text-gray-300 group-hover:text-[#2D3864] transition-colors">إضافة</span>
+          </>
+        )}
         <input
           type="file"
           accept="image/*"
           multiple
+          disabled={uploading}
           className="hidden"
-          onChange={(e) => onAdd(e.target.files)}
-          ref={undefined}
+          onChange={(e) => { onAdd(e.target.files); e.target.value = ''; }}
         />
       </label>
     </div>
@@ -157,47 +168,53 @@ export function PropertyForm({ action, property, mode }: Props) {
     property?.details ?? []
   );
 
-  // Main image
+  // رسالة خطأ رفع الصور (منفصلة عن خطأ الحفظ القادم من الـ action)
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // الصورة الرئيسية — تُرفع مباشرةً وتُحفظ كرابط عام
   const [imagePreview, setImagePreview] = useState<string | null>(
     property?.image ?? null
   );
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imgUploading, setImgUploading] = useState(false);
 
-  // Gallery — merge existing URLs + new files into one list
-  const galleryFileInputRef = useRef<HTMLInputElement | null>(null);
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(
-    (property?.gallery ?? []).map((url) => ({ url }))
+  async function handleMainImage(file: File | undefined) {
+    if (!file) return;
+    setUploadError(null);
+    setImgUploading(true);
+    try {
+      const url = await uploadImageDirect(file);
+      setImagePreview(url);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'فشل رفع الصورة');
+    } finally {
+      setImgUploading(false);
+    }
+  }
+
+  // المعرض — كل العناصر روابط عامة (تُرفع مباشرةً فور الاختيار)
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(
+    property?.gallery ?? []
   );
+  const [galleryUploading, setGalleryUploading] = useState(false);
 
-  function syncFileInput(items: GalleryItem[]) {
-    if (!galleryFileInputRef.current) return;
-    const dt = new DataTransfer();
-    items.forEach((it) => { if (it.file) dt.items.add(it.file); });
-    galleryFileInputRef.current.files = dt.files;
+  async function handleGalleryAdd(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setUploadError(null);
+    setGalleryUploading(true);
+    try {
+      const urls = await uploadImagesDirect(Array.from(files));
+      setGalleryUrls((prev) => [...prev, ...urls]);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'فشل رفع بعض الصور');
+    } finally {
+      setGalleryUploading(false);
+    }
   }
 
-  function handleGalleryAdd(files: FileList | null) {
-    if (!files) return;
-    const newItems: GalleryItem[] = Array.from(files).map((f) => ({
-      url: URL.createObjectURL(f),
-      file: f,
-    }));
-    const merged = [...galleryItems, ...newItems];
-    setGalleryItems(merged);
-    syncFileInput(merged);
-  }
+  const removeGalleryItem = (idx: number) =>
+    setGalleryUrls((prev) => prev.filter((_, i) => i !== idx));
 
-  function removeGalleryItem(idx: number) {
-    const item = galleryItems[idx];
-    if (item.file) URL.revokeObjectURL(item.url);
-    const next = galleryItems.filter((_, i) => i !== idx);
-    setGalleryItems(next);
-    syncFileInput(next);
-  }
-
-  const existingGalleryUrls = galleryItems
-    .filter((it) => !it.file)
-    .map((it) => it.url);
+  const uploading = imgUploading || galleryUploading;
 
   const addDetail = () =>
     setDetails((d) => [...d, { label: '', value: '' }]);
@@ -226,21 +243,11 @@ export function PropertyForm({ action, property, mode }: Props) {
 
   return (
     <form action={formAction}>
-      {/* Hidden fields */}
+      {/* الحقول المخفية — الصور صارت روابط (مرفوعة مباشرةً لـ Supabase) فلا تمرّ ملفات عبر الخادم */}
       <input type="hidden" name="details_json" value={JSON.stringify(details)} />
-      <input type="hidden" name="gallery_existing" value={JSON.stringify(existingGalleryUrls)} />
-      <input type="hidden" name="image_url" value={imagePreview && !imageFile ? imagePreview : ''} />
+      <input type="hidden" name="gallery_existing" value={JSON.stringify(galleryUrls)} />
+      <input type="hidden" name="image_url" value={imagePreview ?? ''} />
       <input type="hidden" name="is_published" value={published ? 'true' : 'false'} />
-      {/* Actual file input for gallery (driven by DataTransfer) */}
-      <input
-        ref={galleryFileInputRef}
-        type="file"
-        name="gallery_files"
-        accept="image/*"
-        multiple
-        className="hidden"
-        readOnly
-      />
 
       {/* ═══ Two-column layout ════════════════════════════════════════ */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
@@ -454,7 +461,12 @@ export function PropertyForm({ action, property, mode }: Props) {
             <div className="p-4 space-y-3">
               {/* Preview */}
               <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center relative">
-                {imagePreview ? (
+                {imgUploading ? (
+                  <div className="text-center text-[#2D3864] py-4">
+                    <Loader2 size={28} className="mx-auto mb-1.5 animate-spin" />
+                    <span className="text-xs">جاري الرفع...</span>
+                  </div>
+                ) : imagePreview ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -464,7 +476,7 @@ export function PropertyForm({ action, property, mode }: Props) {
                     />
                     <button
                       type="button"
-                      onClick={() => { setImagePreview(null); setImageFile(null); }}
+                      onClick={() => setImagePreview(null)}
                       className="absolute top-2 left-2 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md hover:bg-red-600 transition-colors"
                     >
                       <X size={13} />
@@ -478,20 +490,21 @@ export function PropertyForm({ action, property, mode }: Props) {
                 )}
               </div>
 
-              <label className="flex items-center justify-center gap-2 bg-[#2D3864] text-white hover:bg-[#1a2340] px-4 py-2.5 rounded-xl cursor-pointer transition-colors text-sm font-medium w-full">
-                <Upload size={15} /> رفع صورة من الجهاز
+              <label
+                className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-colors text-sm font-medium w-full ${
+                  imgUploading
+                    ? 'bg-gray-200 text-gray-400 cursor-wait'
+                    : 'bg-[#2D3864] text-white hover:bg-[#1a2340] cursor-pointer'
+                }`}
+              >
+                {imgUploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+                {imgUploading ? 'جاري الرفع...' : 'رفع صورة من الجهاز'}
                 <input
                   type="file"
-                  name="image_file"
                   accept="image/*"
+                  disabled={imgUploading}
                   className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setImageFile(file);
-                      setImagePreview(URL.createObjectURL(file));
-                    }
-                  }}
+                  onChange={(e) => { handleMainImage(e.target.files?.[0]); e.target.value = ''; }}
                 />
               </label>
 
@@ -500,11 +513,8 @@ export function PropertyForm({ action, property, mode }: Props) {
                 <input
                   type="url"
                   placeholder="https://..."
-                  value={imagePreview && !imageFile ? imagePreview : ''}
-                  onChange={(e) => {
-                    setImageFile(null);
-                    setImagePreview(e.target.value || null);
-                  }}
+                  value={imagePreview ?? ''}
+                  onChange={(e) => setImagePreview(e.target.value || null)}
                   className={inputCls + ' pr-12'}
                   dir="ltr"
                 />
@@ -521,19 +531,20 @@ export function PropertyForm({ action, property, mode }: Props) {
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-gray-900 text-sm">معرض الصور</p>
                 <p className="text-gray-400 text-[11px]">
-                  {galleryItems.length > 0
-                    ? `${galleryItems.length} صورة`
+                  {galleryUrls.length > 0
+                    ? `${galleryUrls.length} صورة`
                     : 'لا توجد صور'}
                 </p>
               </div>
             </div>
             <div className="p-4">
               <GalleryGrid
-                items={galleryItems}
+                urls={galleryUrls}
+                uploading={galleryUploading}
                 onRemove={removeGalleryItem}
                 onAdd={handleGalleryAdd}
               />
-              {galleryItems.length === 0 && (
+              {galleryUrls.length === 0 && !galleryUploading && (
                 <p className="text-xs text-gray-300 mt-3 text-center">
                   اضغط الزر لإضافة صور — تقدر تختار أكثر من صورة دفعة واحدة
                 </p>
@@ -583,23 +594,25 @@ export function PropertyForm({ action, property, mode }: Props) {
           </div>
 
           {/* Submit */}
-          {state.error && (
+          {(state.error || uploadError) && (
             <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm">
-              {state.error}
+              {uploadError ?? state.error}
             </div>
           )}
           <div className="flex flex-col gap-2.5">
             <button
               type="submit"
-              disabled={isPending}
-              className="w-full flex items-center justify-center gap-2 bg-[#2D3864] text-white px-6 py-3.5 rounded-xl font-bold hover:bg-[#1a2340] transition-colors disabled:opacity-60 shadow-sm text-sm"
+              disabled={isPending || uploading}
+              className="w-full flex items-center justify-center gap-2 bg-[#2D3864] text-white px-6 py-3.5 rounded-xl font-bold hover:bg-[#1a2340] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm text-sm"
             >
-              <Save size={16} />
-              {isPending
-                ? 'جاري الحفظ...'
-                : mode === 'create'
-                  ? 'إضافة العقار'
-                  : 'حفظ التعديلات'}
+              {isPending || uploading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              {uploading
+                ? 'جاري رفع الصور...'
+                : isPending
+                  ? 'جاري الحفظ...'
+                  : mode === 'create'
+                    ? 'إضافة العقار'
+                    : 'حفظ التعديلات'}
             </button>
             <button
               type="button"

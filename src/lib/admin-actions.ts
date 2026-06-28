@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { createAdminClient } from './supabase-admin';
 import {
   createSessionToken,
+  verifySessionToken,
   secureEquals,
   hashSecret,
   verifyAgainstHash,
@@ -91,6 +92,46 @@ async function uploadImage(file: File): Promise<string | null> {
 
   const { data } = admin.storage.from('property-images').getPublicUrl(path);
   return data.publicUrl;
+}
+
+// يتحقق أن المُستدعي أدمن مُسجّل دخول (عبر كوكي الجلسة الموقّعة).
+async function isAdminAuthed(): Promise<boolean> {
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  if (!secret) return false;
+  const token = (await cookies()).get('admin_session')?.value;
+  if (!token) return false;
+  return verifySessionToken(token, secret);
+}
+
+/**
+ * ينشئ رابط رفع موقّعاً (Signed Upload URL) ليرفع المتصفح الصورة مباشرةً إلى
+ * Supabase Storage — يتخطّى حدّ Vercel للـ Serverless Function (4.5MB) لأن الملف
+ * لا يمرّ عبر الخادم إطلاقاً. الفنكشن يُنشئ الرابط فقط (طلب صغير).
+ */
+export async function createImageUploadUrl(
+  fileName: string
+): Promise<{ path: string; token: string } | { error: string }> {
+  if (!(await isAdminAuthed())) return { error: 'غير مصرّح — يلزم تسجيل الدخول' };
+  try {
+    const admin = createAdminClient();
+    const ext = (fileName.split('.').pop() || 'jpg')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '') || 'jpg';
+    const path = `properties/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { data, error } = await admin.storage
+      .from('property-images')
+      .createSignedUploadUrl(path);
+
+    if (error || !data) {
+      console.error('createSignedUploadUrl error:', error?.message);
+      return { error: 'تعذّر إنشاء رابط الرفع' };
+    }
+    return { path: data.path, token: data.token };
+  } catch (err) {
+    console.error('createImageUploadUrl error:', err);
+    return { error: 'تعذّر إنشاء رابط الرفع' };
+  }
 }
 
 // ─── Properties ───────────────────────────────────────────────────────────────
