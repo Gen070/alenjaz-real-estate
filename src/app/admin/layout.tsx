@@ -9,18 +9,31 @@ export const metadata: Metadata = {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   let unreadCount = 0;
+  let todayAppointments = 0;
 
   try {
     const { createAdminClient } = await import('@/lib/supabase-admin');
     const admin = createAdminClient();
-    const { count } = await admin
-      .from('messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_read', false);
-    unreadCount = count ?? 0;
+    const today = new Date().toISOString().split('T')[0];
+
+    const [{ count: msgs }, { count: appts }] = await Promise.all([
+      admin.from('messages').select('*', { count: 'exact', head: true }).eq('is_read', false),
+      admin
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .eq('appointment_date', today)
+        .eq('status', 'مجدول'),
+    ]);
+
+    unreadCount = msgs ?? 0;
+    todayAppointments = appts ?? 0;
   } catch {
-    // Graceful fallback if SUPABASE_SERVICE_ROLE_KEY not configured
+    // Graceful fallback if env keys not configured
   }
 
-  return <AdminLayoutWrapper unreadCount={unreadCount}>{children}</AdminLayoutWrapper>;
+  return (
+    <AdminLayoutWrapper unreadCount={unreadCount} todayAppointments={todayAppointments}>
+      {children}
+    </AdminLayoutWrapper>
+  );
 }

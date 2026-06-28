@@ -337,6 +337,70 @@ export async function updateSettings(
   }
 }
 
+// ─── Appointments ──────────────────────────────────────────────────────────────
+
+type AppointmentActionState = { error: string | null; success: boolean };
+
+export async function upsertAppointment(
+  prevState: AppointmentActionState,
+  formData: FormData
+): Promise<AppointmentActionState> {
+  try {
+    const admin = createAdminClient();
+    const idRaw = formData.get('id') as string;
+    const id = idRaw ? parseInt(idRaw) : null;
+    const propertyIdRaw = formData.get('property_id') as string;
+    const propertyId = propertyIdRaw ? parseInt(propertyIdRaw) : null;
+
+    let property_title: string | null = null;
+    if (propertyId) {
+      const { data: prop } = await admin
+        .from('properties')
+        .select('title')
+        .eq('id', propertyId)
+        .maybeSingle();
+      property_title = (prop as { title: string } | null)?.title ?? null;
+    }
+
+    const payload = {
+      client_name: formData.get('client_name') as string,
+      client_phone: formData.get('client_phone') as string,
+      property_id: propertyId,
+      property_title,
+      appointment_date: formData.get('appointment_date') as string,
+      appointment_time: (formData.get('appointment_time') as string) || null,
+      notes: (formData.get('notes') as string) || null,
+    };
+
+    const { error } = id
+      ? await admin.from('appointments').update(payload).eq('id', id)
+      : await admin.from('appointments').insert([{ ...payload, status: 'مجدول' }]);
+
+    if (error) throw error;
+
+    revalidatePath('/admin/appointments');
+    revalidatePath('/admin');
+    return { error: null, success: true };
+  } catch (err) {
+    console.error('upsertAppointment error:', err);
+    return { error: 'حدث خطأ أثناء حفظ الموعد', success: false };
+  }
+}
+
+export async function updateAppointmentStatus(id: number, status: string): Promise<void> {
+  const admin = createAdminClient();
+  await admin.from('appointments').update({ status }).eq('id', id);
+  revalidatePath('/admin/appointments');
+  revalidatePath('/admin');
+}
+
+export async function deleteAppointment(id: number): Promise<void> {
+  const admin = createAdminClient();
+  await admin.from('appointments').delete().eq('id', id);
+  revalidatePath('/admin/appointments');
+  revalidatePath('/admin');
+}
+
 // ─── تغيير كلمة سر اللوحة ─────────────────────────────────────────────────────
 
 export async function changeAdminPassword(

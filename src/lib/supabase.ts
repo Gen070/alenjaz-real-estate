@@ -41,3 +41,16 @@ export type Message = {
   is_read: boolean;
   created_at: string;
 };
+
+export type Appointment = {
+  id: number;
+  client_name: string;
+  client_phone: string;
+  property_id: number | null;
+  property_title: string | null;
+  appointment_date: string;
+  appointment_time: string | null;
+  status: string;
+  notes: string | null;
+  created_at: string;
+};
