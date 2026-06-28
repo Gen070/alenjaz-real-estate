@@ -1,13 +1,17 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { Settings, Phone, MapPin, ShieldCheck, CheckCircle2, Users, Building2, Upload, X } from 'lucide-react';
+import {
+  Phone, MapPin, ShieldCheck, CheckCircle2,
+  Users, Building2, Upload, X, Save, Link as LinkIcon,
+} from 'lucide-react';
 import { updateSettings } from '@/lib/admin-actions';
 
 const inputCls =
-  'w-full border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#2D3864] transition-all bg-gray-50 text-sm';
-const labelCls = 'block text-sm font-semibold text-gray-700 mb-1.5';
-const sectionCls = 'bg-white rounded-2xl p-6 shadow-sm border border-gray-100';
+  'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 outline-none focus:ring-2 focus:ring-[#2D3864]/25 focus:border-[#2D3864] focus:bg-white transition-all bg-gray-50 text-sm text-gray-800 placeholder:text-gray-400 shadow-[inset_0_1px_3px_rgba(0,0,0,0.05)]';
+const labelCls = 'block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest';
+const cardCls  = 'bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden';
+const cardHeadCls = 'flex items-center gap-2.5 px-5 py-4 border-b border-gray-100';
 
 export function SettingsForm({ settings }: { settings: Record<string, string> }) {
   const [state, formAction, isPending] = useActionState(updateSettings, {
@@ -16,249 +20,245 @@ export function SettingsForm({ settings }: { settings: Record<string, string> })
   });
 
   return (
-    <form action={formAction} className="space-y-6">
-      {/* أرقام التواصل */}
-      <div className={sectionCls}>
-        <h2 className="font-bold text-[#2D3864] mb-2 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
-          <Phone size={16} />
-          أرقام التواصل
-        </h2>
-        <p className="text-gray-400 text-xs mb-5">تظهر في التذييل وقسم تواصل معنا — أضف ما تحتاجه (حتى 4 أرقام)</p>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelCls}>رقم 1</label>
-            <input name="phone_1" defaultValue={settings.phone_1 ?? ''} placeholder="05XXXXXXXX" className={inputCls} dir="ltr" />
+    <form action={formAction}>
+      {/* ═══ Two-column layout ═══════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6">
+
+        {/* ── العمود الرئيسي ──────────────────────────────────────────── */}
+        <div className="space-y-5">
+
+          {/* أرقام التواصل */}
+          <div className={cardCls}>
+            <div className={cardHeadCls}>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                <Phone size={15} className="text-emerald-600" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-sm">أرقام التواصل</p>
+                <p className="text-gray-400 text-[11px]">تظهر في التذييل وقسم تواصل معنا — حتى 4 أرقام</p>
+              </div>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                {[1, 2, 3, 4].map((n) => (
+                  <div key={n}>
+                    <label className={labelCls}>رقم {n}{n > 2 ? ' (اختياري)' : ''}</label>
+                    <input
+                      name={`phone_${n}`}
+                      defaultValue={settings[`phone_${n}`] ?? ''}
+                      placeholder="05XXXXXXXX"
+                      className={inputCls}
+                      dir="ltr"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label className={labelCls}>رقم الواتساب (مع كود الدولة، بدون +)</label>
+                <input
+                  name="whatsapp"
+                  defaultValue={settings.whatsapp ?? ''}
+                  placeholder="966XXXXXXXXX"
+                  className={inputCls}
+                  dir="ltr"
+                />
+              </div>
+            </div>
           </div>
-          <div>
-            <label className={labelCls}>رقم 2</label>
-            <input name="phone_2" defaultValue={settings.phone_2 ?? ''} placeholder="05XXXXXXXX" className={inputCls} dir="ltr" />
+
+          {/* الموقع */}
+          <div className={cardCls}>
+            <div className={cardHeadCls}>
+              <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center shrink-0">
+                <MapPin size={15} className="text-sky-500" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-sm">الموقع الجغرافي</p>
+                <p className="text-gray-400 text-[11px]">يظهر في التذييل وصفحة التواصل</p>
+              </div>
+            </div>
+            <div className="p-5">
+              <label className={labelCls}>نص الموقع</label>
+              <input
+                name="location_text"
+                defaultValue={settings.location_text ?? ''}
+                placeholder="مكة المكرمة، المملكة العربية السعودية"
+                className={inputCls}
+              />
+            </div>
           </div>
-          <div>
-            <label className={labelCls}>رقم 3 (اختياري)</label>
-            <input name="phone_3" defaultValue={settings.phone_3 ?? ''} placeholder="05XXXXXXXX" className={inputCls} dir="ltr" />
+
+          {/* التراخيص */}
+          <div className={cardCls}>
+            <div className={cardHeadCls}>
+              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+                <ShieldCheck size={15} className="text-purple-500" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-sm">روابط التراخيص</p>
+                <p className="text-gray-400 text-[11px]">تظهر عند النقر على أيقونات التذييل</p>
+              </div>
+            </div>
+            <div className="p-5 space-y-4">
+              {[
+                { name: 'license_fal_url',    label: 'رابط ترخيص فال (FAL)',               placeholder: 'https://eservicesred.rega.gov.sa/...' },
+                { name: 'license_marouf_url', label: 'رابط منصة معروف',                   placeholder: 'https://maroof.sa/businesses/...' },
+                { name: 'license_sbc_url',    label: 'رابط المركز السعودي للأعمال (SBC)', placeholder: 'https://cr.mc.gov.sa/...' },
+              ].map(({ name, label, placeholder }) => (
+                <div key={name}>
+                  <label className={labelCls}>{label}</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none">
+                      <LinkIcon size={13} className="text-gray-300" />
+                    </div>
+                    <input
+                      name={name}
+                      defaultValue={settings[name] ?? ''}
+                      placeholder={placeholder}
+                      className={inputCls + ' pr-9'}
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div>
-            <label className={labelCls}>رقم 4 (اختياري)</label>
-            <input name="phone_4" defaultValue={settings.phone_4 ?? ''} placeholder="05XXXXXXXX" className={inputCls} dir="ltr" />
-          </div>
+
+          {/* Feedback + Save */}
+          {state.error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm">
+              {state.error}
+            </div>
+          )}
+          {state.success && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl text-sm flex items-center gap-2">
+              <CheckCircle2 size={16} /> تم حفظ الإعدادات بنجاح
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={isPending}
+            className="flex items-center gap-2 bg-[#2D3864] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#1a2340] transition-colors disabled:opacity-60 shadow-sm text-sm"
+          >
+            <Save size={16} />
+            {isPending ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+          </button>
         </div>
-        <div className="mt-4">
-          <label className={labelCls}>رقم الواتساب (مع كود الدولة، بدون +)</label>
-          <input name="whatsapp" defaultValue={settings.whatsapp ?? ''} placeholder="966XXXXXXXXX" className={inputCls} dir="ltr" />
+
+        {/* ── العمود الجانبي ──────────────────────────────────────────── */}
+        <div className="space-y-5">
+
+          {/* المستخدمون */}
+          <div className={cardCls}>
+            <div className={cardHeadCls}>
+              <div className="w-8 h-8 rounded-lg bg-[#2D3864]/10 flex items-center justify-center shrink-0">
+                <Users size={15} className="text-[#2D3864]" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-sm">المستخدمون</p>
+                <p className="text-gray-400 text-[11px]">أزرار التواصل في صفحة العقار والواتساب العائم</p>
+              </div>
+            </div>
+            <div className="p-4 space-y-4">
+              {[
+                { key: 'user1', label: 'المستخدم الأول', defaultName: 'المبيعات الرئيسية', color: 'bg-[#2D3864]' },
+                { key: 'user2', label: 'المستخدم الثاني', defaultName: 'الدعم الفني',       color: 'bg-amber-500' },
+              ].map(({ key, label, defaultName, color }) => (
+                <div key={key} className="border border-gray-100 rounded-2xl overflow-hidden">
+                  <div className={`${color} px-4 py-2.5 flex items-center gap-2`}>
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px] font-bold">
+                      {key === 'user1' ? '١' : '٢'}
+                    </div>
+                    <p className="text-white font-bold text-sm">{label}</p>
+                  </div>
+                  <div className="p-4 space-y-3">
+                    <div>
+                      <label className={labelCls}>الاسم / المسمى</label>
+                      <input name={`${key}_name`} defaultValue={settings[`${key}_name`] ?? defaultName} className={inputCls} placeholder={defaultName} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>رقم الهاتف</label>
+                      <input name={`${key}_phone`} defaultValue={settings[`${key}_phone`] ?? ''} className={inputCls} placeholder="05XXXXXXXX" dir="ltr" />
+                    </div>
+                    <div>
+                      <label className={labelCls}>واتساب (مع كود الدولة)</label>
+                      <input name={`${key}_whatsapp`} defaultValue={settings[`${key}_whatsapp`] ?? ''} className={inputCls} placeholder="966XXXXXXXXX" dir="ltr" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* صور المدن */}
+          <div className={cardCls}>
+            <div className={cardHeadCls}>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                <Building2 size={15} className="text-amber-600" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-sm">صور المدن</p>
+                <p className="text-gray-400 text-[11px]">قسم &quot;نغطي أهم مدن المملكة&quot; في الصفحة الرئيسية</p>
+              </div>
+            </div>
+            <div className="p-4 grid grid-cols-3 gap-3">
+              <CityImageField cityKey="city_riyadh_image"  label="الرياض"         defaultUrl={settings.city_riyadh_image ?? ''} />
+              <CityImageField cityKey="city_jeddah_image"  label="جدة"            defaultUrl={settings.city_jeddah_image ?? ''} />
+              <CityImageField cityKey="city_madinah_image" label="المدينة المنورة" defaultUrl={settings.city_madinah_image ?? ''} />
+            </div>
+          </div>
+
         </div>
       </div>
-
-      {/* الموقع */}
-      <div className={sectionCls}>
-        <h2 className="font-bold text-[#2D3864] mb-5 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
-          <MapPin size={16} />
-          الموقع
-        </h2>
-        <div>
-          <label className={labelCls}>نص الموقع (يظهر في التذييل)</label>
-          <input
-            name="location_text"
-            defaultValue={settings.location_text ?? ''}
-            placeholder="مكة المكرمة، المملكة العربية السعودية"
-            className={inputCls}
-          />
-        </div>
-      </div>
-
-      {/* المستخدمون */}
-      <div className={sectionCls}>
-        <h2 className="font-bold text-[#2D3864] mb-2 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
-          <Users size={16} />
-          المستخدمون (أزرار التواصل)
-        </h2>
-        <p className="text-gray-400 text-xs mb-5">
-          كل مستخدم له زر واتساب + زر اتصال منفصل في صفحة العقار وزر الواتساب العائم
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* مستخدم 1 */}
-          <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-100">
-            <p className="font-bold text-[#2D3864] text-sm">المستخدم الأول</p>
-            <div>
-              <label className={labelCls}>الاسم / المسمى الوظيفي</label>
-              <input name="user1_name" defaultValue={settings.user1_name ?? 'المبيعات الرئيسية'} className={inputCls} placeholder="مثال: المبيعات الرئيسية" />
-            </div>
-            <div>
-              <label className={labelCls}>رقم الهاتف</label>
-              <input name="user1_phone" defaultValue={settings.user1_phone ?? ''} className={inputCls} placeholder="05XXXXXXXX" dir="ltr" />
-            </div>
-            <div>
-              <label className={labelCls}>رقم الواتساب (مع كود الدولة)</label>
-              <input name="user1_whatsapp" defaultValue={settings.user1_whatsapp ?? ''} className={inputCls} placeholder="966XXXXXXXXX" dir="ltr" />
-            </div>
-          </div>
-          {/* مستخدم 2 */}
-          <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-100">
-            <p className="font-bold text-[#2D3864] text-sm">المستخدم الثاني</p>
-            <div>
-              <label className={labelCls}>الاسم / المسمى الوظيفي</label>
-              <input name="user2_name" defaultValue={settings.user2_name ?? 'الدعم الفني'} className={inputCls} placeholder="مثال: الدعم الفني" />
-            </div>
-            <div>
-              <label className={labelCls}>رقم الهاتف</label>
-              <input name="user2_phone" defaultValue={settings.user2_phone ?? ''} className={inputCls} placeholder="05XXXXXXXX" dir="ltr" />
-            </div>
-            <div>
-              <label className={labelCls}>رقم الواتساب (مع كود الدولة)</label>
-              <input name="user2_whatsapp" defaultValue={settings.user2_whatsapp ?? ''} className={inputCls} placeholder="966XXXXXXXXX" dir="ltr" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* صور المدن */}
-      <div className={sectionCls}>
-        <h2 className="font-bold text-[#2D3864] mb-2 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
-          <Building2 size={16} />
-          صور المدن
-        </h2>
-        <p className="text-gray-400 text-xs mb-5">
-          الصور الظاهرة في قسم &quot;نغطي أهم مدن المملكة&quot; بالصفحة الرئيسية — ارفعها من جهازك أو الصق رابطاً
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <CityImageField cityKey="city_riyadh_image" label="الرياض" defaultUrl={settings.city_riyadh_image ?? ''} />
-          <CityImageField cityKey="city_jeddah_image" label="جدة" defaultUrl={settings.city_jeddah_image ?? ''} />
-          <CityImageField cityKey="city_madinah_image" label="المدينة المنورة" defaultUrl={settings.city_madinah_image ?? ''} />
-        </div>
-      </div>
-
-      {/* التراخيص */}
-      <div className={sectionCls}>
-        <h2 className="font-bold text-[#2D3864] mb-2 text-base border-b border-gray-100 pb-3 flex items-center gap-2">
-          <ShieldCheck size={16} />
-          روابط التراخيص
-        </h2>
-        <p className="text-gray-400 text-xs mb-5">
-          أضف روابط التحقق من التراخيص — تظهر عند النقر على أيقونات التذييل
-        </p>
-        <div className="space-y-4">
-          <div>
-            <label className={labelCls}>رابط ترخيص فال (FAL)</label>
-            <input
-              name="license_fal_url"
-              defaultValue={settings.license_fal_url ?? ''}
-              placeholder="https://eservicesred.rega.gov.sa/..."
-              className={inputCls}
-              dir="ltr"
-            />
-          </div>
-          <div>
-            <label className={labelCls}>رابط منصة معروف</label>
-            <input
-              name="license_marouf_url"
-              defaultValue={settings.license_marouf_url ?? ''}
-              placeholder="https://maroof.sa/businesses/..."
-              className={inputCls}
-              dir="ltr"
-            />
-          </div>
-          <div>
-            <label className={labelCls}>رابط المركز السعودي للأعمال (SBC)</label>
-            <input
-              name="license_sbc_url"
-              defaultValue={settings.license_sbc_url ?? ''}
-              placeholder="https://cr.mc.gov.sa/..."
-              className={inputCls}
-              dir="ltr"
-            />
-          </div>
-        </div>
-      </div>
-
-      {state.error && (
-        <p className="text-red-600 bg-red-50 border border-red-200 p-4 rounded-xl text-sm">
-          {state.error}
-        </p>
-      )}
-
-      {state.success && (
-        <p className="text-emerald-700 bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-sm flex items-center gap-2">
-          <CheckCircle2 size={16} />
-          تم حفظ الإعدادات بنجاح ✓
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="flex items-center gap-2 bg-[#2D3864] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#3e4a7a] transition-colors disabled:opacity-60 shadow-sm"
-      >
-        <Settings size={18} />
-        {isPending ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
-      </button>
     </form>
   );
 }
 
-function CityImageField({
-  cityKey,
-  label,
-  defaultUrl,
-}: {
-  cityKey: string;
-  label: string;
-  defaultUrl: string;
-}) {
-  const [urlValue, setUrlValue] = useState(defaultUrl);
+// ─── CityImageField ───────────────────────────────────────────────────────────
+function CityImageField({ cityKey, label, defaultUrl }: { cityKey: string; label: string; defaultUrl: string }) {
+  const [urlValue,    setUrlValue]    = useState(defaultUrl);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const display = filePreview || urlValue || null;
 
   return (
-    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-3">
-      <p className="font-bold text-[#2D3864] text-sm text-center">{label}</p>
-
-      <div className="w-full h-28 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+    <div className="border border-gray-100 rounded-xl overflow-hidden">
+      <div className="relative w-full h-20 bg-gray-50 flex items-center justify-center">
         {display ? (
-          // معاينة (قد تكون blob محلي) — next/image لا يدعم blob
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={display} alt={label} className="w-full h-full object-cover" />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={display} alt={label} className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => { setUrlValue(''); setFilePreview(null); }}
+              className="absolute top-1 left-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow hover:bg-red-600 transition-colors"
+            >
+              <X size={10} />
+            </button>
+          </>
         ) : (
-          <Building2 size={28} className="text-gray-300" />
+          <Building2 size={20} className="text-gray-200" />
         )}
       </div>
-
-      <label className="flex items-center justify-center gap-2 bg-[#DEF4FC] text-[#2D3864] hover:bg-[#2D3864] hover:text-white px-3 py-2 rounded-lg cursor-pointer text-xs font-medium transition-colors">
-        <Upload size={14} /> رفع من الجهاز
+      <div className="p-2 border-t border-gray-100 space-y-1.5">
+        <p className="font-bold text-gray-700 text-[11px] text-center">{label}</p>
+        <label className="flex items-center justify-center gap-1 bg-[#2D3864] text-white hover:bg-[#1a2340] px-2 py-1.5 rounded-lg cursor-pointer text-[10px] font-medium transition-colors w-full">
+          <Upload size={10} /> رفع
+          <input type="file" name={`${cityKey}_file`} accept="image/*" className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) { setFilePreview(URL.createObjectURL(file)); setUrlValue(''); }
+            }}
+          />
+        </label>
         <input
-          type="file"
-          name={`${cityKey}_file`}
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) setFilePreview(URL.createObjectURL(file));
-          }}
+          name={cityKey}
+          value={urlValue}
+          onChange={(e) => { setUrlValue(e.target.value); setFilePreview(null); }}
+          placeholder="رابط..."
+          className="w-full border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-[#2D3864]/30 focus:border-[#2D3864] bg-gray-50 text-[10px] placeholder:text-gray-300 transition-all"
+          dir="ltr"
         />
-      </label>
-
-      <input
-        name={cityKey}
-        value={urlValue}
-        onChange={(e) => {
-          setUrlValue(e.target.value);
-          setFilePreview(null);
-        }}
-        placeholder="أو رابط صورة"
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#2D3864] bg-white text-xs"
-        dir="ltr"
-      />
-
-      {display && (
-        <button
-          type="button"
-          onClick={() => {
-            setUrlValue('');
-            setFilePreview(null);
-          }}
-          className="text-red-400 hover:text-red-600 text-xs flex items-center gap-1 mx-auto"
-        >
-          <X size={12} /> إزالة
-        </button>
-      )}
+      </div>
     </div>
   );
 }

@@ -2,7 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Building2, MessageSquare, Settings, CalendarClock } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Building2,
+  MessageSquare,
+  Settings,
+  CalendarDays,
+} from 'lucide-react';
 
 type BadgeKey = 'messages' | 'appointments' | null;
 
@@ -30,7 +36,7 @@ const navGroups: NavGroup[] = [
     label: 'المحتوى',
     items: [
       { href: '/admin/properties', label: 'العقارات', icon: Building2, exact: false, badge: null },
-      { href: '/admin/appointments', label: 'المواعيد', icon: CalendarClock, exact: false, badge: 'appointments' },
+      { href: '/admin/appointments', label: 'التقويم', icon: CalendarDays, exact: false, badge: 'appointments' },
     ],
   },
   {
@@ -57,37 +63,41 @@ export function SidebarNav({
   const pathname = usePathname();
 
   return (
-    <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+    <nav className="flex-1 px-3 py-5 space-y-5 overflow-y-auto">
       {navGroups.map((group) => (
         <div key={group.label}>
-          <p className="px-4 mb-1.5 text-white/25 text-[10px] font-semibold uppercase tracking-widest select-none">
+          <p className="px-4 mb-2 text-white/20 text-[10px] font-semibold uppercase tracking-widest select-none">
             {group.label}
           </p>
           <div className="space-y-0.5">
             {group.items.map(({ href, label, icon: Icon, exact, badge }) => {
-              const isActive = exact ? pathname === href : pathname.startsWith(href);
+              const isActive =
+                exact ? pathname === href : pathname.startsWith(href);
               const count =
                 badge === 'messages'
                   ? unreadCount
                   : badge === 'appointments'
                     ? todayAppointments
                     : 0;
+
               return (
                 <Link
                   key={href}
                   href={href}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm font-medium relative ${
                     isActive
-                      ? 'bg-[#C9A84C] text-[#2D3864]'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      ? 'bg-[#C9A84C]/20 text-[#C9A84C] shadow-[inset_0_0_0_1px_rgba(201,168,76,0.3)]'
+                      : 'text-white/60 hover:bg-white/8 hover:text-white'
                   }`}
                 >
-                  <Icon size={17} />
+                  <Icon size={17} className={isActive ? 'text-[#C9A84C]' : ''} />
                   <span>{label}</span>
                   {count > 0 && (
                     <span
-                      className={`absolute left-3 text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center font-bold px-1 ${
-                        isActive ? 'bg-[#2D3864] text-white' : 'bg-red-500 text-white'
+                      className={`absolute left-3 text-[10px] rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-bold px-1 ${
+                        isActive
+                          ? 'bg-[#C9A84C] text-[#2D3864]'
+                          : 'bg-red-500 text-white'
                       }`}
                     >
                       {count > 9 ? '9+' : count}

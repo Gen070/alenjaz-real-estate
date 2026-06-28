@@ -28,7 +28,7 @@ export default async function EditPropertyPage({
   const updateWithId = updateProperty.bind(null, numId);
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
         <Link
           href="/admin/properties"
