@@ -6,22 +6,28 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Bed, Bath, Square, ArrowLeft, Search, MapPin, SlidersHorizontal, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TYPE_OPTS, CATEGORY_OPTS } from '@/lib/property-options';
+import { CityAutocomplete } from '@/components/ui/CityAutocomplete';
 
 export function PropertiesClient({ properties }: { properties: Property[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('الجميع');
   const [propertyType, setPropertyType] = useState('الجميع');
-  const [city, setCity] = useState('الجميع');
-  const [neighborhood, setNeighborhood] = useState('');
+  const [city, setCity] = useState('');
+  const [district, setDistrict] = useState('');
   const [sortBy, setSortBy] = useState('الأحدث');
 
   const filteredProperties = properties.filter((prop) => {
     const matchesSearch = (prop.title ?? '').includes(searchTerm);
     const matchesCategory = category === 'الجميع' ? true : prop.category === category;
     const matchesType = propertyType === 'الجميع' ? true : prop.type === propertyType;
-    const matchesCity = city === 'الجميع' ? true : (prop.location ?? '').includes(city);
-    const matchesNeighborhood = neighborhood === '' ? true : (prop.location ?? '').includes(neighborhood);
-    return matchesSearch && matchesCategory && matchesType && matchesCity && matchesNeighborhood;
+    const matchesCity = city.trim() === ''
+      ? true
+      : (prop.city ?? prop.location ?? '').includes(city.trim());
+    const matchesDistrict = district.trim() === ''
+      ? true
+      : (prop.district ?? prop.location ?? '').includes(district.trim());
+    return matchesSearch && matchesCategory && matchesType && matchesCity && matchesDistrict;
   });
 
   const num = (v: string | null | undefined) => parseInt((v ?? '0').replace(/\D/g, '') || '0', 10);
@@ -45,53 +51,30 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
             <label className="text-gray-500 text-sm font-semibold mb-2 flex items-center gap-2">
               <MapPin size={16} /> المدينة
             </label>
-            <select
+            <CityAutocomplete
               value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--color-navy)] transition-all appearance-none"
-            >
-              <option value="الجميع">كل المدن</option>
-              <option value="الرياض">الرياض</option>
-              <option value="جدة">جدة</option>
-              <option value="الدمام">الدمام</option>
-              <option value="مكة">مكة المكرمة</option>
-            </select>
+              onChange={setCity}
+              placeholder="اكتب اسم المدينة..."
+              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--color-navy)] transition-all w-full"
+            />
           </div>
 
           <div className="flex flex-col">
             <label className="text-gray-500 text-sm font-semibold mb-2 flex items-center gap-2">
-              <MapPin size={16} /> الحي
+              <MapPin size={16} /> المنطقة / الحي
             </label>
             <input
               type="text"
+              value={district}
+              onChange={(e) => setDistrict(e.target.value)}
               placeholder="اسم الحي..."
-              value={neighborhood}
-              onChange={(e) => setNeighborhood(e.target.value)}
               className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--color-navy)] transition-all"
             />
           </div>
 
           <div className="flex flex-col">
             <label className="text-gray-500 text-sm font-semibold mb-2 flex items-center gap-2">
-              <Home size={16} /> نوع العقار
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--color-navy)] transition-all appearance-none"
-            >
-              <option value="الجميع">جميع العقارات</option>
-              <option value="فلل">فلل</option>
-              <option value="شقق">شقق</option>
-              <option value="أراضي">أراضي</option>
-              <option value="مكاتب">مكاتب</option>
-              <option value="تجاري">تجاري</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-gray-500 text-sm font-semibold mb-2 flex items-center gap-2">
-              <SlidersHorizontal size={16} /> التصنيف
+              <SlidersHorizontal size={16} /> نوع العرض
             </label>
             <select
               value={propertyType}
@@ -99,8 +82,25 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
               className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--color-navy)] transition-all appearance-none"
             >
               <option value="الجميع">الكل</option>
-              <option value="للبيع">للبيع</option>
-              <option value="للإيجار">للإيجار</option>
+              {TYPE_OPTS.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-gray-500 text-sm font-semibold mb-2 flex items-center gap-2">
+              <Home size={16} /> التصنيف
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--color-navy)] transition-all appearance-none"
+            >
+              <option value="الجميع">جميع العقارات</option>
+              {CATEGORY_OPTS.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
             </select>
           </div>
 

@@ -10,7 +10,9 @@ export function PropertyGallery({ images, title }: { images: string[]; title: st
   const hasImages = images.length > 0;
   const multiple = images.length > 1;
 
+  // التالي فعلياً (يتقدّم في المصفوفة) — الزر الأيمن
   const next = () => setCurrent((c) => (c + 1) % images.length);
+  // السابق فعلياً (يرجع في المصفوفة) — الزر الأيسر
   const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
 
   const arrowCls =
@@ -21,14 +23,21 @@ export function PropertyGallery({ images, title }: { images: string[]; title: st
       {/* Main image */}
       <div className="md:col-span-3 h-full rounded-2xl overflow-hidden relative group bg-gray-200">
         {hasImages ? (
-          <Image
-            src={images[current]}
-            alt={title}
-            fill
-            sizes="(max-width: 768px) 100vw, 75vw"
-            className="object-cover"
-            priority
-          />
+          // كل الصور تُحمَّل مسبقاً وتُبدَّل بتلاشي بصري بدل الطلب من الشبكة عند كل ضغطة —
+          // يمنع التأخير الملحوظ عند التنقل بين الصور.
+          images.map((src, i) => (
+            <Image
+              key={src + i}
+              src={src}
+              alt={title}
+              fill
+              sizes="(max-width: 768px) 100vw, 75vw"
+              className={`object-cover transition-opacity duration-300 ${
+                i === current ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+              priority={i === 0}
+            />
+          ))
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
             لا توجد صور
@@ -37,12 +46,12 @@ export function PropertyGallery({ images, title }: { images: string[]; title: st
 
         {multiple && (
           <>
-            {/* السابق — على اليمين في الاتجاه العربي */}
-            <button type="button" onClick={prev} aria-label="الصورة السابقة" className={`${arrowCls} right-3`}>
+            {/* التالي — على اليمين */}
+            <button type="button" onClick={next} aria-label="الصورة التالية" className={`${arrowCls} right-3`}>
               <ChevronRight size={22} />
             </button>
-            {/* التالي — على اليسار */}
-            <button type="button" onClick={next} aria-label="الصورة التالية" className={`${arrowCls} left-3`}>
+            {/* السابق — على اليسار */}
+            <button type="button" onClick={prev} aria-label="الصورة السابقة" className={`${arrowCls} left-3`}>
               <ChevronLeft size={22} />
             </button>
             {/* العدّاد */}

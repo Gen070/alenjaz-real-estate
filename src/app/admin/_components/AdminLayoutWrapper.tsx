@@ -17,6 +17,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/properties':        'العقارات',
   '/admin/properties/new':    'إضافة عقار',
   '/admin/appointments':      'التقويم',
+  '/admin/clients':           'العملاء',
   '/admin/messages':          'الطلبات',
   '/admin/settings':          'الإعدادات',
 };
@@ -26,6 +27,7 @@ function getPageTitle(pathname: string) {
   if (pathname.includes('/edit')) return 'تعديل عقار';
   if (pathname.startsWith('/admin/properties')) return 'العقارات';
   if (pathname.startsWith('/admin/appointments')) return 'التقويم';
+  if (pathname.startsWith('/admin/clients')) return 'العملاء';
   return 'لوحة التحكم';
 }
 
@@ -42,12 +44,17 @@ export function AdminLayoutWrapper({ children, unreadCount, todayAppointments }:
 
       {/* ═══ Sidebar ════════════════════════════════════════════ */}
       <aside className="w-64 bg-[#1a2340] text-white flex flex-col fixed right-0 top-0 h-full z-20 shrink-0">
+        {/* Top brand accent line */}
+        <div className="h-1 bg-gradient-to-l from-[#C9A84C] via-[#e8c060] to-[#C9A84C] shrink-0" />
 
         {/* Logo */}
         <div className="p-5 border-b border-white/[0.07]">
           <Link href="/admin" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#C9A84C] to-[#e8c060] rounded-xl flex items-center justify-center shrink-0 shadow-md">
-              <Building2 size={20} className="text-[#1a2340]" />
+            <div className="relative w-10 h-10 shrink-0">
+              <div className="absolute inset-0 bg-[#C9A84C] rounded-xl blur-md opacity-30" />
+              <div className="relative w-10 h-10 bg-gradient-to-br from-[#C9A84C] to-[#e8c060] rounded-xl flex items-center justify-center shadow-md">
+                <Building2 size={20} className="text-[#1a2340]" />
+              </div>
             </div>
             <div>
               <p className="font-bold text-sm leading-tight text-white">الإنجاز للعقار</p>
@@ -129,6 +136,12 @@ export function AdminLayoutWrapper({ children, unreadCount, todayAppointments }:
 
             {/* Quick add buttons */}
             <div className="hidden sm:flex items-center gap-1.5">
+              <Link
+                href="/admin/clients"
+                className="flex items-center gap-1 border border-gray-200 text-gray-600 text-xs px-2.5 py-1.5 rounded-lg hover:border-[#C9A84C] hover:text-[#2D3864] transition-colors"
+              >
+                <Plus size={11} />عميل
+              </Link>
               <Link
                 href="/admin/appointments"
                 className="flex items-center gap-1 border border-gray-200 text-gray-600 text-xs px-2.5 py-1.5 rounded-lg hover:border-[#C9A84C] hover:text-[#2D3864] transition-colors"

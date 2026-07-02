@@ -8,6 +8,7 @@ import {
   MessageSquare,
   Settings,
   CalendarDays,
+  Users,
 } from 'lucide-react';
 
 type BadgeKey = 'messages' | 'appointments' | null;
@@ -36,6 +37,7 @@ const navGroups: NavGroup[] = [
     label: 'المحتوى',
     items: [
       { href: '/admin/properties', label: 'العقارات', icon: Building2, exact: false, badge: null },
+      { href: '/admin/clients', label: 'العملاء', icon: Users, exact: false, badge: null },
       { href: '/admin/appointments', label: 'التقويم', icon: CalendarDays, exact: false, badge: 'appointments' },
     ],
   },

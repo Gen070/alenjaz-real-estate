@@ -138,10 +138,17 @@ export async function createImageUploadUrl(
 
 type PropertyActionState = { error: string | null; success: boolean };
 
+// يبني نص الموقع المعروض (يُستخدم في البطاقات والصفحات وبيانات SEO) من المدينة والمنطقة المُدخلتين.
+function composeLocation(city: string | null, district: string | null): string | null {
+  if (district && city) return `${district}، ${city}`;
+  return city || district || null;
+}
+
 export async function createProperty(
   prevState: PropertyActionState,
   formData: FormData
 ): Promise<PropertyActionState> {
+  if (!(await isAdminAuthed())) return { error: 'غير مصرّح — يلزم تسجيل الدخول', success: false };
   try {
     const admin = createAdminClient();
 
@@ -172,12 +179,17 @@ export async function createProperty(
       .map((f) => f.trim())
       .filter(Boolean);
 
+    const city = (formData.get('city') as string) || null;
+    const district = (formData.get('district') as string) || null;
+
     const { error } = await admin.from('properties').insert([
       {
         property_code: (formData.get('property_code') as string) || null,
         title: formData.get('title') as string,
         description: (formData.get('description') as string) || null,
-        location: (formData.get('location') as string) || null,
+        city,
+        district,
+        location: composeLocation(city, district),
         price: (formData.get('price') as string) || null,
         type: (formData.get('type') as string) || null,
         category: (formData.get('category') as string) || null,
@@ -212,6 +224,7 @@ export async function updateProperty(
   prevState: PropertyActionState,
   formData: FormData
 ): Promise<PropertyActionState> {
+  if (!(await isAdminAuthed())) return { error: 'غير مصرّح — يلزم تسجيل الدخول', success: false };
   try {
     const admin = createAdminClient();
 
@@ -242,13 +255,18 @@ export async function updateProperty(
       .map((f) => f.trim())
       .filter(Boolean);
 
+    const city = (formData.get('city') as string) || null;
+    const district = (formData.get('district') as string) || null;
+
     const { error } = await admin
       .from('properties')
       .update({
         property_code: (formData.get('property_code') as string) || null,
         title: formData.get('title') as string,
         description: (formData.get('description') as string) || null,
-        location: (formData.get('location') as string) || null,
+        city,
+        district,
+        location: composeLocation(city, district),
         price: (formData.get('price') as string) || null,
         type: (formData.get('type') as string) || null,
         category: (formData.get('category') as string) || null,
@@ -281,6 +299,7 @@ export async function updateProperty(
 }
 
 export async function deleteProperty(id: number): Promise<void> {
+  if (!(await isAdminAuthed())) return;
   const admin = createAdminClient();
   await admin.from('properties').delete().eq('id', id);
   revalidatePath('/admin/properties');
@@ -289,6 +308,7 @@ export async function deleteProperty(id: number): Promise<void> {
 }
 
 export async function togglePublish(id: number, current: boolean): Promise<void> {
+  if (!(await isAdminAuthed())) return;
   const admin = createAdminClient();
   await admin
     .from('properties')
@@ -303,6 +323,7 @@ export async function togglePublish(id: number, current: boolean): Promise<void>
 // ─── Messages ─────────────────────────────────────────────────────────────────
 
 export async function markMessageRead(id: number, isRead: boolean): Promise<void> {
+  if (!(await isAdminAuthed())) return;
   const admin = createAdminClient();
   await admin.from('messages').update({ is_read: isRead }).eq('id', id);
   revalidatePath('/admin/messages');
@@ -310,6 +331,7 @@ export async function markMessageRead(id: number, isRead: boolean): Promise<void
 }
 
 export async function deleteMessage(id: number): Promise<void> {
+  if (!(await isAdminAuthed())) return;
   const admin = createAdminClient();
   await admin.from('messages').delete().eq('id', id);
   revalidatePath('/admin/messages');
@@ -324,6 +346,7 @@ export async function updateSettings(
   prevState: SettingsActionState,
   formData: FormData
 ): Promise<SettingsActionState> {
+  if (!(await isAdminAuthed())) return { error: 'غير مصرّح — يلزم تسجيل الدخول', success: false };
   try {
     const admin = createAdminClient();
 
@@ -386,6 +409,7 @@ export async function upsertAppointment(
   prevState: AppointmentActionState,
   formData: FormData
 ): Promise<AppointmentActionState> {
+  if (!(await isAdminAuthed())) return { error: 'غير مصرّح — يلزم تسجيل الدخول', success: false };
   try {
     const admin = createAdminClient();
     const idRaw = formData.get('id') as string;
@@ -429,6 +453,7 @@ export async function upsertAppointment(
 }
 
 export async function updateAppointmentStatus(id: number, status: string): Promise<void> {
+  if (!(await isAdminAuthed())) return;
   const admin = createAdminClient();
   await admin.from('appointments').update({ status }).eq('id', id);
   revalidatePath('/admin/appointments');
@@ -436,10 +461,83 @@ export async function updateAppointmentStatus(id: number, status: string): Promi
 }
 
 export async function deleteAppointment(id: number): Promise<void> {
+  if (!(await isAdminAuthed())) return;
   const admin = createAdminClient();
   await admin.from('appointments').delete().eq('id', id);
   revalidatePath('/admin/appointments');
   revalidatePath('/admin');
+}
+
+// ─── العملاء (الملاك/المؤجرين) ──────────────────────────────────────────────
+
+type ClientActionState = { error: string | null; success: boolean };
+
+export async function upsertClient(
+  prevState: ClientActionState,
+  formData: FormData
+): Promise<ClientActionState> {
+  if (!(await isAdminAuthed())) return { error: 'غير مصرّح — يلزم تسجيل الدخول', success: false };
+  try {
+    const admin = createAdminClient();
+    const idRaw = formData.get('id') as string;
+    const id = idRaw ? parseInt(idRaw) : null;
+
+    const payload = {
+      name: formData.get('name') as string,
+      phone: formData.get('phone') as string,
+      whatsapp: (formData.get('whatsapp') as string) || null,
+      email: (formData.get('email') as string) || null,
+      client_type: (formData.get('client_type') as string) || 'مالك',
+      national_id: (formData.get('national_id') as string) || null,
+      notes: (formData.get('notes') as string) || null,
+    };
+
+    let clientId = id;
+    if (id) {
+      const { error } = await admin
+        .from('clients')
+        .update({ ...payload, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    } else {
+      const { data, error } = await admin
+        .from('clients')
+        .insert([payload])
+        .select('id')
+        .single();
+      if (error) throw error;
+      clientId = (data as { id: number }).id;
+    }
+
+    // ربط العقارات المختارة
+    const propertyIds = formData.getAll('property_ids') as string[];
+    const relationType = (formData.get('relation_type') as string) || 'ملك';
+    if (clientId) {
+      await admin.from('client_properties').delete().eq('client_id', clientId);
+      if (propertyIds.length > 0) {
+        await admin.from('client_properties').insert(
+          propertyIds.map((pid) => ({
+            client_id: clientId,
+            property_id: parseInt(pid),
+            relation_type: relationType,
+          }))
+        );
+      }
+    }
+
+    revalidatePath('/admin/clients');
+    return { error: null, success: true };
+  } catch (err) {
+    console.error('upsertClient error:', err);
+    return { error: 'حدث خطأ أثناء حفظ بيانات العميل', success: false };
+  }
+}
+
+export async function deleteClient(id: number): Promise<void> {
+  if (!(await isAdminAuthed())) return;
+  const admin = createAdminClient();
+  await admin.from('clients').delete().eq('id', id);
+  revalidatePath('/admin/clients');
 }
 
 // ─── تغيير كلمة سر اللوحة ─────────────────────────────────────────────────────
@@ -448,6 +546,7 @@ export async function changeAdminPassword(
   prevState: SettingsActionState,
   formData: FormData
 ): Promise<SettingsActionState> {
+  if (!(await isAdminAuthed())) return { error: 'غير مصرّح — يلزم تسجيل الدخول', success: false };
   try {
     const current = formData.get('current_password') as string;
     const next = formData.get('new_password') as string;

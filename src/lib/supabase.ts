@@ -11,6 +11,8 @@ export type Property = {
   title: string;
   description: string | null;
   location: string | null;
+  city: string | null;
+  district: string | null;
   price: string | null;
   type: string | null;
   category: string | null;
@@ -52,5 +54,26 @@ export type Appointment = {
   appointment_time: string | null;
   status: string;
   notes: string | null;
+  created_at: string;
+};
+
+export type Client = {
+  id: number;
+  name: string;
+  phone: string;
+  whatsapp: string | null;
+  email: string | null;
+  client_type: string; // مالك / مؤجر / مستأجر / مشتري
+  national_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string | null;
+};
+
+export type ClientProperty = {
+  id: number;
+  client_id: number;
+  property_id: number;
+  relation_type: string; // ملك / إدارة / تأجير
   created_at: string;
 };

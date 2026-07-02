@@ -8,6 +8,7 @@ import {
   useTransition,
   useCallback,
 } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Appointment, Property } from '@/lib/supabase';
 import {
   upsertAppointment,
@@ -30,6 +31,8 @@ import {
   Pencil,
   Trash2,
   CalendarClock,
+  Search,
+  AlertTriangle,
 } from 'lucide-react';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -52,7 +55,12 @@ const STATUS_CHIP: Record<string, string> = {
 };
 
 function todayStr() {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function isOverdue(appt: Appointment, today: string) {
+  return appt.status === 'مجدول' && appt.appointment_date < today;
 }
 
 // ── Build calendar cells ──────────────────────────────────────────────────────
@@ -87,14 +95,18 @@ function AppointmentModal({
   properties: Pick<Property, 'id' | 'title'>[];
   defaultDate: string;
 }) {
+  const router = useRouter();
   const [state, action, isPending] = useActionState(upsertAppointment, {
     error: null,
     success: false,
   });
 
   useEffect(() => {
-    if (state.success) onClose();
-  }, [state.success, onClose]);
+    if (state.success) {
+      router.refresh();
+      onClose();
+    }
+  }, [state.success, onClose, router]);
 
   return (
     <div
@@ -208,13 +220,18 @@ function ApptCard({
   appt,
   onEdit,
   onDeleted,
+  onStatusChange,
+  today,
 }: {
   appt: Appointment;
   onEdit: (a: Appointment) => void;
   onDeleted: (id: number) => void;
+  onStatusChange: (id: number, status: string) => void;
+  today: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const overdue = isOverdue(appt, today);
 
   return (
     <div className="p-3.5 hover:bg-gray-50/60 transition-colors">
@@ -233,9 +250,16 @@ function ApptCard({
           {appt.property_title && (
             <p className="text-gray-400 text-xs mt-0.5 truncate">{appt.property_title}</p>
           )}
-          <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${STATUS_CHIP[appt.status] ?? ''}`}>
-            {appt.status}
-          </span>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full ${STATUS_CHIP[appt.status] ?? ''}`}>
+              {appt.status}
+            </span>
+            {overdue && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                <AlertTriangle size={9} />متأخر
+              </span>
+            )}
+          </div>
         </div>
         <button onClick={() => onEdit(appt)}
           className="w-6 h-6 rounded-lg bg-gray-100 hover:bg-[#2D3864] hover:text-white text-gray-400 flex items-center justify-center transition-colors shrink-0 mt-0.5">
@@ -246,12 +270,18 @@ function ApptCard({
       {/* Actions */}
       {appt.status === 'مجدول' && !confirmDelete && (
         <div className="flex gap-1.5 mt-2.5 pr-5">
-          <button onClick={() => startTransition(async () => { await updateAppointmentStatus(appt.id, 'مكتمل'); })}
+          <button onClick={() => startTransition(async () => {
+              onStatusChange(appt.id, 'مكتمل');
+              await updateAppointmentStatus(appt.id, 'مكتمل');
+            })}
             disabled={isPending}
             className="flex-1 text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white py-1.5 rounded-lg transition-colors disabled:opacity-60 flex items-center justify-center gap-1">
             <CheckCircle2 size={12} />تم
           </button>
-          <button onClick={() => startTransition(async () => { await updateAppointmentStatus(appt.id, 'ملغي'); })}
+          <button onClick={() => startTransition(async () => {
+              onStatusChange(appt.id, 'ملغي');
+              await updateAppointmentStatus(appt.id, 'ملغي');
+            })}
             disabled={isPending}
             className="flex-1 text-xs bg-red-50 text-red-500 hover:bg-red-500 hover:text-white py-1.5 rounded-lg transition-colors disabled:opacity-60 flex items-center justify-center gap-1">
             <XCircle size={12} />إلغاء
@@ -293,6 +323,13 @@ export function AppointmentsClient({
   const [editing, setEditing]       = useState<Appointment | null>(null);
   const [modalKey, setModalKey]     = useState(0);
   const [localAppts, setLocalAppts] = useState<Appointment[]>(appointments);
+  const [query, setQuery]           = useState('');
+  const [statusFilter, setStatusFilter] = useState<'الكل' | 'مجدول' | 'مكتمل' | 'ملغي'>('الكل');
+
+  // يُعاد ضبط القائمة المحلية عند وصول بيانات جديدة من الخادم (بعد revalidate/refresh)
+  useEffect(() => {
+    setLocalAppts(appointments);
+  }, [appointments]);
 
   const year  = curDate.getFullYear();
   const month = curDate.getMonth();
@@ -301,13 +338,34 @@ export function AppointmentsClient({
 
   const byDate = useMemo(() => {
     const map: Record<string, Appointment[]> = {};
-    localAppts.forEach((a) => {
-      (map[a.appointment_date] ??= []).push(a);
-    });
+    localAppts
+      .filter((a) => statusFilter === 'الكل' || a.status === statusFilter)
+      .forEach((a) => {
+        (map[a.appointment_date] ??= []).push(a);
+      });
     return map;
-  }, [localAppts]);
+  }, [localAppts, statusFilter]);
 
   const selAppts = byDate[selDate] ?? [];
+
+  const counts = useMemo(() => {
+    const c = { الكل: localAppts.length, مجدول: 0, مكتمل: 0, ملغي: 0 };
+    localAppts.forEach((a) => {
+      if (a.status === 'مجدول') c.مجدول++;
+      else if (a.status === 'مكتمل') c.مكتمل++;
+      else if (a.status === 'ملغي') c.ملغي++;
+    });
+    return c;
+  }, [localAppts]);
+
+  const searchResults = useMemo(() => {
+    if (!query.trim()) return null;
+    const q = query.trim().toLowerCase();
+    return localAppts
+      .filter((a) => statusFilter === 'الكل' || a.status === statusFilter)
+      .filter((a) => a.client_name.toLowerCase().includes(q) || a.client_phone.includes(q))
+      .sort((a, b) => b.appointment_date.localeCompare(a.appointment_date));
+  }, [query, statusFilter, localAppts]);
 
   function prevMonth() { setCurDate(new Date(year, month - 1, 1)); }
   function nextMonth() { setCurDate(new Date(year, month + 1, 1)); }
@@ -335,12 +393,16 @@ export function AppointmentsClient({
     setLocalAppts((prev) => prev.filter((a) => a.id !== id));
   }
 
+  function handleStatusChange(id: number, status: string) {
+    setLocalAppts((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+  }
+
   const selDayDate = new Date(selDate + 'T12:00:00');
 
   return (
     <div className="h-[calc(100vh-56px)] flex flex-col p-6 gap-0" dir="rtl">
       {/* ─ Header ─ */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Calendar size={22} className="text-[#C9A84C]" />
@@ -348,78 +410,114 @@ export function AppointmentsClient({
           </h1>
           <p className="text-gray-400 text-sm mt-0.5">{localAppts.length} موعد مسجّل</p>
         </div>
+
+        <div className="flex items-center gap-2 flex-1 max-w-md">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="ابحث بالاسم أو رقم الجوال..."
+              className="w-full border border-gray-200 rounded-xl pr-9 pl-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#2D3864]/20 focus:border-[#2D3864] transition-all"
+            />
+          </div>
+        </div>
+
         <button
           onClick={() => openAdd(selDate)}
-          className="flex items-center gap-2 bg-[#2D3864] text-white text-sm px-4 py-2.5 rounded-xl hover:bg-[#1e2a4a] transition-colors"
+          className="flex items-center gap-2 bg-[#2D3864] text-white text-sm px-4 py-2.5 rounded-xl hover:bg-[#1e2a4a] transition-colors shrink-0"
         >
           <Plus size={16} />موعد جديد
         </button>
+      </div>
+
+      {/* ─ Status filter chips ─ */}
+      <div className="flex items-center gap-2 mb-5">
+        {(['الكل', 'مجدول', 'مكتمل', 'ملغي'] as const).map((s) => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+              statusFilter === s
+                ? 'bg-[#2D3864] text-white border-[#2D3864]'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-[#2D3864]/30'
+            }`}
+          >
+            {s} <span className="opacity-70">({counts[s]})</span>
+          </button>
+        ))}
       </div>
 
       {/* ─ Body ─ */}
       <div className="flex gap-5 flex-1 min-h-0">
         {/* Side panel (RIGHT in RTL) */}
         <div className="w-72 shrink-0 flex flex-col gap-4">
-          {/* Selected day info */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs text-gray-400 font-medium mb-0.5">
-                  {DAYS_FULL[selDayDate.getDay()]}
-                </p>
-                <p className="text-4xl font-black text-[#2D3864] leading-none">
-                  {selDayDate.getDate()}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {MONTHS_AR[selDayDate.getMonth()]} {selDayDate.getFullYear()}
-                </p>
-                {selDate === today && (
-                  <span className="inline-block mt-2 text-xs bg-[#C9A84C] text-[#2D3864] font-bold px-2.5 py-0.5 rounded-full">
-                    اليوم
-                  </span>
-                )}
+          {/* Selected day info — hidden while searching */}
+          {!searchResults && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs text-gray-400 font-medium mb-0.5">
+                    {DAYS_FULL[selDayDate.getDay()]}
+                  </p>
+                  <p className="text-4xl font-black text-[#2D3864] leading-none">
+                    {selDayDate.getDate()}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {MONTHS_AR[selDayDate.getMonth()]} {selDayDate.getFullYear()}
+                  </p>
+                  {selDate === today && (
+                    <span className="inline-block mt-2 text-xs bg-[#C9A84C] text-[#2D3864] font-bold px-2.5 py-0.5 rounded-full">
+                      اليوم
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => openAdd(selDate)}
+                  className="w-10 h-10 rounded-xl bg-[#2D3864] text-white flex items-center justify-center hover:bg-[#1e2a4a] transition-colors shadow-sm"
+                >
+                  <Plus size={18} />
+                </button>
               </div>
-              <button
-                onClick={() => openAdd(selDate)}
-                className="w-10 h-10 rounded-xl bg-[#2D3864] text-white flex items-center justify-center hover:bg-[#1e2a4a] transition-colors shadow-sm"
-              >
-                <Plus size={18} />
-              </button>
             </div>
-          </div>
+          )}
 
-          {/* Appointments for selected day */}
+          {/* Appointments for selected day, or search results */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-50 shrink-0">
               <h3 className="text-sm font-bold text-gray-900">
-                المواعيد
-                {selAppts.length > 0 && (
+                {searchResults ? 'نتائج البحث' : 'المواعيد'}
+                {(searchResults ?? selAppts).length > 0 && (
                   <span className="mr-2 text-xs bg-[#2D3864] text-white px-1.5 py-0.5 rounded-full">
-                    {selAppts.length}
+                    {(searchResults ?? selAppts).length}
                   </span>
                 )}
               </h3>
             </div>
 
-            {selAppts.length === 0 ? (
+            {(searchResults ?? selAppts).length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-400">
                 <CalendarClock size={28} className="opacity-25 mb-2" />
                 <p className="text-sm">لا توجد مواعيد</p>
-                <button
-                  onClick={() => openAdd(selDate)}
-                  className="mt-2 text-xs text-[#2D3864] hover:underline"
-                >
-                  إضافة موعد
-                </button>
+                {!searchResults && (
+                  <button
+                    onClick={() => openAdd(selDate)}
+                    className="mt-2 text-xs text-[#2D3864] hover:underline"
+                  >
+                    إضافة موعد
+                  </button>
+                )}
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
-                {selAppts.map((appt) => (
+                {(searchResults ?? selAppts).map((appt) => (
                   <ApptCard
                     key={appt.id}
                     appt={appt}
+                    today={today}
                     onEdit={openEdit}
                     onDeleted={handleDeleted}
+                    onStatusChange={handleStatusChange}
                   />
                 ))}
               </div>

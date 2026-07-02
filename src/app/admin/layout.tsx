@@ -14,7 +14,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   try {
     const { createAdminClient } = await import('@/lib/supabase-admin');
     const admin = createAdminClient();
-    const today = new Date().toISOString().split('T')[0];
+    // بتوقيت الرياض صراحةً — خوادم Vercel تعمل بتوقيت UTC ولا تعكس توقيت السعودية
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(new Date());
 
     const [{ count: msgs }, { count: appts }] = await Promise.all([
       admin.from('messages').select('*', { count: 'exact', head: true }).eq('is_read', false),

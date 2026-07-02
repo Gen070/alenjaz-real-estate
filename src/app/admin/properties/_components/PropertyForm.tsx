@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import type { Property } from '@/lib/supabase';
 import { uploadImageDirect, uploadImagesDirect } from '@/lib/upload-client';
+import { TYPE_OPTS, CATEGORY_OPTS, USAGE_OPTS } from '@/lib/property-options';
+import { CityAutocomplete } from '@/components/ui/CityAutocomplete';
 
 type ActionFn = (
   prevState: { error: string | null; success: boolean },
@@ -25,11 +27,6 @@ const inputCls =
 const labelCls = 'block text-[11px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest';
 const cardCls  = 'bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden';
 const cardHeadCls = 'flex items-center gap-2.5 px-5 py-4 border-b border-gray-100';
-
-// ─── Options ─────────────────────────────────────────────────────────────────
-const TYPE_OPTS     = ['للبيع', 'للإيجار', 'للإيجار الموسمي', 'للاستثمار', 'للتنازل'];
-const CATEGORY_OPTS = ['فلل', 'شقق', 'أراضي', 'مكاتب', 'محلات تجارية', 'مستودعات', 'عمائر', 'استراحات', 'مزارع', 'فندقي', 'مجمعات'];
-const USAGE_OPTS    = ['سكني', 'تجاري', 'مختلط', 'صناعي', 'زراعي', 'ترفيهي'];
 
 // ─── ComboSelect ──────────────────────────────────────────────────────────────
 function ComboSelect({
@@ -241,6 +238,8 @@ export function PropertyForm({ action, property, mode }: Props) {
     property?.is_published ?? false
   );
 
+  const [city, setCity] = useState(property?.city ?? '');
+
   return (
     <form action={formAction}>
       {/* الحقول المخفية — الصور صارت روابط (مرفوعة مباشرةً لـ Supabase) فلا تمرّ ملفات عبر الخادم */}
@@ -290,11 +289,21 @@ export function PropertyForm({ action, property, mode }: Props) {
                 />
               </div>
               <div>
-                <label className={labelCls}>الموقع</label>
+                <label className={labelCls}>المدينة</label>
+                <CityAutocomplete
+                  value={city}
+                  onChange={setCity}
+                  name="city"
+                  placeholder="اكتب أو اختر مدينة..."
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>المنطقة / الحي</label>
                 <input
-                  name="location"
-                  defaultValue={property?.location ?? ''}
-                  placeholder="المدينة، الحي"
+                  name="district"
+                  defaultValue={property?.district ?? ''}
+                  placeholder="مثال: حي الشاطئ"
                   className={inputCls}
                 />
               </div>

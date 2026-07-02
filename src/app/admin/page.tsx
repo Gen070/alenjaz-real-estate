@@ -9,6 +9,7 @@ import {
   Inbox,
   Clock,
   TrendingUp,
+  Users,
 } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase-admin';
 import type { Message, Appointment } from '@/lib/supabase';
@@ -17,7 +18,9 @@ export const revalidate = 0;
 
 export default async function AdminDashboard() {
   const admin = createAdminClient();
-  const today = new Date().toISOString().split('T')[0];
+  // خوادم Vercel تعمل بتوقيت UTC دائماً — يجب حساب "اليوم" بتوقيت الرياض صراحةً
+  // وإلا فإن "اليوم" يتغيّر بفارق ساعات عن اليوم الفعلي في السعودية (خصوصاً بين ٠٠:٠٠–٠٣:٠٠ بتوقيت الرياض).
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' }).format(new Date());
 
   const [
     { count: totalProps },
@@ -27,6 +30,7 @@ export default async function AdminDashboard() {
     { count: totalMsgs },
     { count: todayAppts },
     { count: totalAppts },
+    { count: totalClients },
     { data: recentMsgs },
     { data: upcomingAppts },
   ] = await Promise.all([
@@ -38,6 +42,7 @@ export default async function AdminDashboard() {
     admin.from('appointments').select('*', { count: 'exact', head: true })
       .eq('appointment_date', today).eq('status', 'مجدول'),
     admin.from('appointments').select('*', { count: 'exact', head: true }).eq('status', 'مجدول'),
+    admin.from('clients').select('*', { count: 'exact', head: true }),
     admin.from('messages').select('*').order('created_at', { ascending: false }).limit(5),
     admin.from('appointments').select('*').eq('status', 'مجدول')
       .gte('appointment_date', today).order('appointment_date').order('appointment_time').limit(4),
@@ -62,6 +67,12 @@ export default async function AdminDashboard() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href="/admin/clients"
+            className="flex items-center gap-1.5 border border-[#2D3864]/25 text-[#2D3864] text-sm px-4 py-2 rounded-xl hover:bg-[#2D3864] hover:text-white transition-colors"
+          >
+            <Plus size={14} />عميل جديد
+          </Link>
+          <Link
             href="/admin/appointments"
             className="flex items-center gap-1.5 border border-[#2D3864]/25 text-[#2D3864] text-sm px-4 py-2 rounded-xl hover:bg-[#2D3864] hover:text-white transition-colors"
           >
@@ -77,8 +88,8 @@ export default async function AdminDashboard() {
       </div>
 
       {/* ── KPI Row ──────────────────────────────────────────── */}
-      {/* Grid: wide properties card (col-span-2) + 2 narrow cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Grid: wide properties card (col-span-2) + 3 narrow cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
 
         {/* Wide: Properties card */}
         <Link href="/admin/properties" className="col-span-2">
@@ -148,6 +159,20 @@ export default async function AdminDashboard() {
             <p className="text-3xl font-black text-gray-900 tabular-nums">{todayAppts ?? 0}</p>
             <p className="text-gray-700 text-sm font-medium mt-0.5">مواعيد اليوم</p>
             <p className="text-gray-400 text-xs mt-1">{totalAppts ?? 0} مجدّل</p>
+          </div>
+        </Link>
+
+        {/* Clients */}
+        <Link href="/admin/clients">
+          <div className="h-full bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-11 h-11 bg-sky-50 border border-sky-100 rounded-xl flex items-center justify-center">
+                <Users size={20} className="text-sky-600" />
+              </div>
+            </div>
+            <p className="text-3xl font-black text-gray-900 tabular-nums">{totalClients ?? 0}</p>
+            <p className="text-gray-700 text-sm font-medium mt-0.5">العملاء</p>
+            <p className="text-gray-400 text-xs mt-1">ملاك ومؤجرين ومستأجرين</p>
           </div>
         </Link>
       </div>
